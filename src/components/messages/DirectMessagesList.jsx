@@ -21,11 +21,7 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
         const allUsers = await base44.entities.User.list();
         // Filter out current user from the list (you can't message yourself)
         const otherUsers = allUsers.filter(u => u.email !== currentUser?.email);
-        // Sort alphabetically by name
-        const sortedUsers = otherUsers.sort((a, b) => 
-          (a.full_name || '').localeCompare(b.full_name || '')
-        );
-        setUsers(sortedUsers);
+        setUsers(otherUsers);
       } catch (error) {
         console.error('Failed to fetch users:', error);
       }
@@ -41,21 +37,11 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
         setUsers(prev => 
           prev.map(u => u.id === event.id ? event.data : u)
         );
-      } else if (event.type === 'create') {
-        // Add new user if not current user
-        if (event.data.email !== currentUser?.email) {
-          setUsers(prev => {
-            const updated = [...prev, event.data];
-            return updated.sort((a, b) => 
-              (a.full_name || '').localeCompare(b.full_name || '')
-            );
-          });
-        }
       }
     });
 
     return unsubscribe;
-  }, [currentUser?.email]);
+  }, []);
 
   const getInitials = (name) => {
     if (!name) return "?";
@@ -69,9 +55,9 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
     }));
   };
 
-  // Group users by role (already sorted alphabetically)
+  // Group users by role
   const admins = users.filter(u => u.role === 'admin');
-  const teamMembers = users.filter(u => u.role === 'user' || !u.role);
+  const teamMembers = users.filter(u => u.role === 'user');
 
   const UserItem = ({ user, isCurrentUser }) => (
     <motion.button

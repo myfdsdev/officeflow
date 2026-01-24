@@ -26,15 +26,14 @@ export default function DirectMessages() {
     queryFn: async () => {
       if (!user || !selectedUser) return [];
       
-      // Fetch ALL messages without filtering - let client handle it
-      const allMessages = await base44.entities.Message.list('created_date', 1000);
+      // Fetch all messages and filter in memory
+      const allMessages = await base44.entities.Message.list('-created_date', 500);
       
-      // Filter to get conversation between current user and selected user
-      const conversationMessages = allMessages.filter(msg => {
-        const isSentByMe = msg.sender_id === user.id && msg.receiver_id === selectedUser.id;
-        const isReceivedFromThem = msg.sender_id === selectedUser.id && msg.receiver_id === user.id;
-        return isSentByMe || isReceivedFromThem;
-      });
+      // Filter messages between current user and selected user
+      const conversationMessages = allMessages.filter(m => 
+        (m.sender_id === user.id && m.receiver_id === selectedUser.id) ||
+        (m.sender_id === selectedUser.id && m.receiver_id === user.id)
+      );
       
       // Sort by created_date ascending (oldest first)
       return conversationMessages.sort((a, b) => 
@@ -42,7 +41,7 @@ export default function DirectMessages() {
       );
     },
     enabled: !!user && !!selectedUser,
-    refetchInterval: 2000, // Poll every 2 seconds
+    refetchInterval: 3000, // Poll every 3 seconds for new messages
   });
 
   // Subscribe to real-time message updates
@@ -72,7 +71,7 @@ export default function DirectMessages() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (text) => {
-      const newMessage = await base44.entities.Message.create({
+      return await base44.entities.Message.create({
         sender_id: user.id,
         sender_email: user.email,
         sender_name: user.full_name,
@@ -80,13 +79,10 @@ export default function DirectMessages() {
         receiver_email: selectedUser.email,
         receiver_name: selectedUser.full_name,
         message_text: text,
-        is_read: false,
       });
-      return newMessage;
     },
     onSuccess: () => {
-      // Invalidate all message queries to refresh
-      queryClient.invalidateQueries({ queryKey: ['messages', user.id, selectedUser.id] });
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
       setMessageText('');
     },
   });
