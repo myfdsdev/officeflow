@@ -23,6 +23,7 @@ export default function EmployeeList({ employees, todayAttendance = [] }) {
   const statusStyles = {
     present: "bg-emerald-100 text-emerald-700",
     absent: "bg-rose-100 text-rose-700",
+    late: "bg-orange-100 text-orange-700",
     half_day: "bg-amber-100 text-amber-700",
     on_leave: "bg-blue-100 text-blue-700",
   };

@@ -14,6 +14,7 @@ import { FileSpreadsheet, Pencil, Search } from "lucide-react";
 const statusStyles = {
   present: "bg-emerald-50 text-emerald-700 border-emerald-200",
   absent: "bg-rose-50 text-rose-700 border-rose-200",
+  late: "bg-orange-50 text-orange-700 border-orange-200",
   half_day: "bg-amber-50 text-amber-700 border-amber-200",
   on_leave: "bg-blue-50 text-blue-700 border-blue-200",
 };
@@ -178,6 +179,7 @@ export default function AttendanceReportTable({ attendance, onEdit, isEditing })
                   <SelectContent>
                     <SelectItem value="present">Present</SelectItem>
                     <SelectItem value="absent">Absent</SelectItem>
+                    <SelectItem value="late">Late</SelectItem>
                     <SelectItem value="half_day">Half Day</SelectItem>
                     <SelectItem value="on_leave">On Leave</SelectItem>
                   </SelectContent>

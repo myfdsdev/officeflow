@@ -37,14 +37,31 @@ export default function Dashboard() {
   const todayAttendance = myAttendance.find(a => a.date === today);
 
   const clockInMutation = useMutation({
-    mutationFn: () => base44.entities.Attendance.create({
-      employee_id: user.id,
-      employee_email: user.email,
-      employee_name: user.full_name,
-      date: today,
-      clock_in: format(new Date(), 'HH:mm'),
-      status: 'present',
-    }),
+    mutationFn: () => {
+      const now = new Date();
+      const clockInTime = format(now, 'HH:mm');
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const totalMinutes = hours * 60 + minutes;
+      
+      // Determine status based on check-in time
+      // Before 10:00 AM (600 minutes) → Present
+      // After 10:15 AM (615 minutes) → Late
+      // Between 10:00 and 10:15 → Present (grace period)
+      let status = 'present';
+      if (totalMinutes > 615) {
+        status = 'late';
+      }
+      
+      return base44.entities.Attendance.create({
+        employee_id: user.id,
+        employee_email: user.email,
+        employee_name: user.full_name,
+        date: today,
+        clock_in: clockInTime,
+        status: status,
+      });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myAttendance'] }),
   });
 
@@ -54,11 +71,19 @@ export default function Dashboard() {
       const clockOutTime = format(new Date(), 'HH:mm').split(':');
       const clockInMinutes = parseInt(clockInTime[0]) * 60 + parseInt(clockInTime[1]);
       const clockOutMinutes = parseInt(clockOutTime[0]) * 60 + parseInt(clockOutTime[1]);
-      const workHours = (clockOutMinutes - clockInMinutes) / 60;
+      const workHours = Math.max(0, (clockOutMinutes - clockInMinutes) / 60);
+      
+      // Determine final status based on work hours
+      // If less than 4 hours → Half Day
+      let finalStatus = todayAttendance.status;
+      if (workHours < 4) {
+        finalStatus = 'half_day';
+      }
       
       return base44.entities.Attendance.update(todayAttendance.id, {
         clock_out: format(new Date(), 'HH:mm'),
-        work_hours: Math.max(0, workHours),
+        work_hours: workHours,
+        status: finalStatus,
       });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myAttendance'] }),

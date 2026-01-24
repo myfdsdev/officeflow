@@ -130,6 +130,7 @@ export default function AttendanceHistoryPage() {
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="present">Present</SelectItem>
                     <SelectItem value="absent">Absent</SelectItem>
+                    <SelectItem value="late">Late</SelectItem>
                     <SelectItem value="half_day">Half Day</SelectItem>
                     <SelectItem value="on_leave">On Leave</SelectItem>
                   </SelectContent>
