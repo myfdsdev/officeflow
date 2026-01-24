@@ -18,8 +18,8 @@ export default function Welcome() {
         const userData = await base44.auth.me();
         setUser(userData);
         
-        // If user profile is complete, redirect to dashboard
-        if (userData.mobile_number && userData.employee_id && userData.department) {
+        // If user has basic profile info, redirect to dashboard
+        if (userData.mobile_number && userData.employee_id) {
           window.location.href = userData.role === 'admin' 
             ? createPageUrl('AdminDashboard') 
             : createPageUrl('Dashboard');

@@ -241,7 +241,9 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <main className="lg:ml-64 pt-16 lg:pt-0">
-        {children}
+        <div className="min-h-screen">
+          {children}
+        </div>
       </main>
     </div>
   );

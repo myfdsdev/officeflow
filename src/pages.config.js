@@ -9,6 +9,7 @@ import MyProfile from './pages/MyProfile';
 import Settings from './pages/Settings';
 import Welcome from './pages/Welcome';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import AccessDenied from './pages/AccessDenied';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "Settings": Settings,
     "Welcome": Welcome,
     "PrivacyPolicy": PrivacyPolicy,
+    "AccessDenied": AccessDenied,
 }
 
 export const pagesConfig = {
