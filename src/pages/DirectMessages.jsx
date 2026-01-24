@@ -46,23 +46,21 @@ export default function DirectMessages() {
 
   // Subscribe to real-time message updates
   useEffect(() => {
-    if (!user || !selectedUser) return;
+    if (!user) return;
 
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         const msg = event.data;
-        // Only update if message is part of current conversation
-        if (
-          (msg.sender_id === user.id && msg.receiver_id === selectedUser.id) ||
-          (msg.sender_id === selectedUser.id && msg.receiver_id === user.id)
-        ) {
-          queryClient.invalidateQueries({ queryKey: ['messages', user.id, selectedUser.id] });
+        // Update if message involves current user (as sender or receiver)
+        if (msg.sender_id === user.id || msg.receiver_id === user.id) {
+          // Invalidate all message queries to refresh all conversations
+          queryClient.invalidateQueries({ queryKey: ['messages'] });
         }
       }
     });
 
     return unsubscribe;
-  }, [user, selectedUser, queryClient]);
+  }, [user, queryClient]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
