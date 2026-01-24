@@ -19,8 +19,13 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
     const fetchUsers = async () => {
       try {
         const allUsers = await base44.entities.User.list();
-        // Filter out current user from the list (you can't message yourself)
-        const otherUsers = allUsers.filter(u => u.email !== currentUser?.email);
+        // Filter out current user and users without complete profile
+        const otherUsers = allUsers.filter(u => 
+          u.email !== currentUser?.email && 
+          u.employee_id && // Has completed profile
+          u.department && // Has selected department
+          u.mobile_number // Has added mobile number
+        );
         setUsers(otherUsers);
       } catch (error) {
         console.error('Failed to fetch users:', error);
