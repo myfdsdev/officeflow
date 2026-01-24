@@ -19,13 +19,17 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
     const fetchUsers = async () => {
       try {
         const allUsers = await base44.entities.User.list();
-        setUsers(allUsers);
+        // Filter out current user from the list (you can't message yourself)
+        const otherUsers = allUsers.filter(u => u.email !== currentUser?.email);
+        setUsers(otherUsers);
       } catch (error) {
         console.error('Failed to fetch users:', error);
       }
     };
 
-    fetchUsers();
+    if (currentUser) {
+      fetchUsers();
+    }
 
     // Subscribe to real-time user updates
     const unsubscribe = base44.entities.User.subscribe((event) => {
@@ -206,8 +210,11 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
                 </div>
               )}
 
-              {users.length === 0 && (
-                <p className="text-center text-gray-400 text-sm py-8">No users available</p>
+              {users.length === 0 && currentUser && (
+                <div className="text-center text-gray-400 text-sm py-8">
+                  <p>No other users available</p>
+                  <p className="text-xs mt-2">Ask your admin to invite team members</p>
+                </div>
               )}
             </CardContent>
           </motion.div>

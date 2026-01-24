@@ -26,18 +26,22 @@ export default function DirectMessages() {
     queryFn: async () => {
       if (!user || !selectedUser) return [];
       
-      const allMessages = await base44.entities.Message.list('-created_date', 200);
+      // Fetch all messages and filter in memory
+      const allMessages = await base44.entities.Message.list('-created_date', 500);
       
       // Filter messages between current user and selected user
-      return allMessages
-        .filter(m => 
-          (m.sender_id === user.id && m.receiver_id === selectedUser.id) ||
-          (m.sender_id === selectedUser.id && m.receiver_id === user.id)
-        )
-        .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+      const conversationMessages = allMessages.filter(m => 
+        (m.sender_id === user.id && m.receiver_id === selectedUser.id) ||
+        (m.sender_id === selectedUser.id && m.receiver_id === user.id)
+      );
+      
+      // Sort by created_date ascending (oldest first)
+      return conversationMessages.sort((a, b) => 
+        new Date(a.created_date) - new Date(b.created_date)
+      );
     },
     enabled: !!user && !!selectedUser,
-    refetchInterval: 2000, // Poll every 2 seconds for new messages
+    refetchInterval: 3000, // Poll every 3 seconds for new messages
   });
 
   // Subscribe to real-time message updates
