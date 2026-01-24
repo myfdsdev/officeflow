@@ -37,11 +37,16 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
         setUsers(prev => 
           prev.map(u => u.id === event.id ? event.data : u)
         );
+      } else if (event.type === 'create') {
+        // Add newly invited users to the list
+        if (event.data.email !== currentUser?.email) {
+          setUsers(prev => [...prev, event.data]);
+        }
       }
     });
 
     return unsubscribe;
-  }, []);
+  }, [currentUser]);
 
   const getInitials = (name) => {
     if (!name) return "?";
@@ -213,7 +218,9 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
               {users.length === 0 && currentUser && (
                 <div className="text-center text-gray-400 text-sm py-8">
                   <p>No other users available</p>
-                  <p className="text-xs mt-2">Ask your admin to invite team members</p>
+                  {currentUser.role !== 'admin' && (
+                    <p className="text-xs mt-2">Waiting for team members to join</p>
+                  )}
                 </div>
               )}
             </CardContent>
