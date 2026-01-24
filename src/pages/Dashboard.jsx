@@ -61,11 +61,30 @@ export default function Dashboard() {
         status: status,
       });
 
-      // Get all admins
+      // Send success notification to employee
+      await base44.entities.Notification.create({
+        user_email: user.email,
+        title: 'Check-in Successful',
+        message: `You checked in at ${clockInTime}${status === 'late' ? ' (Late Entry)' : ''}`,
+        type: 'check_in',
+        related_id: attendance.id,
+      });
+
+      // If late, send late entry alert
+      if (status === 'late') {
+        await base44.entities.Notification.create({
+          user_email: user.email,
+          title: 'Late Entry Alert',
+          message: `Your check-in at ${clockInTime} is after office time. Please contact HR if needed.`,
+          type: 'check_in',
+          related_id: attendance.id,
+        });
+      }
+
+      // Get all admins and notify them
       const allUsers = await base44.entities.User.list();
       const admins = allUsers.filter(u => u.role === 'admin');
 
-      // Send notification to all admins
       for (const admin of admins) {
         await base44.entities.Notification.create({
           user_email: admin.email,
@@ -82,9 +101,10 @@ export default function Dashboard() {
   });
 
   const clockOutMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const clockInTime = todayAttendance.clock_in.split(':');
-      const clockOutTime = format(new Date(), 'HH:mm').split(':');
+      const clockOutTimeStr = format(new Date(), 'HH:mm');
+      const clockOutTime = clockOutTimeStr.split(':');
       const clockInMinutes = parseInt(clockInTime[0]) * 60 + parseInt(clockInTime[1]);
       const clockOutMinutes = parseInt(clockOutTime[0]) * 60 + parseInt(clockOutTime[1]);
       const workHours = Math.max(0, (clockOutMinutes - clockInMinutes) / 60);
@@ -96,11 +116,22 @@ export default function Dashboard() {
         finalStatus = 'half_day';
       }
       
-      return base44.entities.Attendance.update(todayAttendance.id, {
-        clock_out: format(new Date(), 'HH:mm'),
+      const updated = await base44.entities.Attendance.update(todayAttendance.id, {
+        clock_out: clockOutTimeStr,
         work_hours: workHours,
         status: finalStatus,
       });
+
+      // Send success notification to employee
+      await base44.entities.Notification.create({
+        user_email: user.email,
+        title: 'Check-out Successful',
+        message: `You checked out at ${clockOutTimeStr}. Total work hours: ${workHours.toFixed(1)}hrs`,
+        type: 'check_in',
+        related_id: todayAttendance.id,
+      });
+
+      return updated;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myAttendance'] }),
   });

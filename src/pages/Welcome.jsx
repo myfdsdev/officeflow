@@ -5,10 +5,12 @@ import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Clock, CheckCircle2, Calendar, TrendingUp, ArrowRight, Shield, Users } from "lucide-react";
 import { createPageUrl } from "@/utils";
+import OnboardingScreen from '../components/onboarding/OnboardingScreen';
 
 export default function Welcome() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -38,9 +40,15 @@ export default function Welcome() {
       // User logged in but profile incomplete
       window.location.href = createPageUrl('CompleteProfile');
     } else {
-      // User not logged in, redirect to login
-      base44.auth.redirectToLogin(createPageUrl('Welcome'));
+      // Show onboarding first
+      setShowOnboarding(true);
     }
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    // User not logged in, redirect to login
+    base44.auth.redirectToLogin(createPageUrl('Welcome'));
   };
 
   if (loading) {
@@ -49,6 +57,10 @@ export default function Welcome() {
         <div className="animate-pulse text-white">Loading...</div>
       </div>
     );
+  }
+
+  if (showOnboarding) {
+    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
   }
 
   return (
