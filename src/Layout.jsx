@@ -26,6 +26,8 @@ import {
   BarChart3,
 } from "lucide-react";
 import NotificationBell from './components/notifications/NotificationBell';
+import { useUserActivity } from './components/hooks/useUserActivity';
+import OnlineStatusIndicator from './components/admin/OnlineStatusIndicator';
 
 const employeeNavItems = [
   { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
@@ -51,6 +53,9 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     base44.auth.me().then(setUser);
   }, []);
+
+  // Track user activity and update online status
+  useUserActivity(user);
 
   const getInitials = (name) => {
     if (!name) return "?";
@@ -152,15 +157,20 @@ export default function Layout({ children, currentPageName }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors">
-                  <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
-                    {user.profile_photo ? (
-                      <AvatarImage src={user.profile_photo} alt={user.full_name} />
-                    ) : (
-                      <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
-                        {getInitials(user.full_name)}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
+                      {user.profile_photo ? (
+                        <AvatarImage src={user.profile_photo} alt={user.full_name} />
+                      ) : (
+                        <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
+                          {getInitials(user.full_name)}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div className="absolute -bottom-0.5 -right-0.5">
+                      <OnlineStatusIndicator isOnline={true} size="sm" />
+                    </div>
+                  </div>
                   <div className="text-left flex-1 min-w-0">
                     <p className="font-medium text-gray-900 truncate">{user.full_name}</p>
                     <p className="text-xs text-gray-500 truncate">{user.email}</p>
@@ -204,15 +214,20 @@ export default function Layout({ children, currentPageName }) {
                 <div className="p-4 border-b">
                   {user && (
                     <div className="flex items-center gap-3">
-                      <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
-                        {user.profile_photo ? (
-                          <AvatarImage src={user.profile_photo} alt={user.full_name} />
-                        ) : (
-                          <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
-                            {getInitials(user.full_name)}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
+                          {user.profile_photo ? (
+                            <AvatarImage src={user.profile_photo} alt={user.full_name} />
+                          ) : (
+                            <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
+                              {getInitials(user.full_name)}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="absolute -bottom-0.5 -right-0.5">
+                          <OnlineStatusIndicator isOnline={true} size="sm" />
+                        </div>
+                      </div>
                       <div>
                         <p className="font-medium text-gray-900">{user.full_name}</p>
                         <p className="text-xs text-gray-500">{user.role === 'admin' ? 'Admin' : 'Employee'}</p>
