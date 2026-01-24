@@ -6,11 +6,19 @@ import { motion } from "framer-motion";
 import { Clock, Calendar } from "lucide-react";
 
 const statusStyles = {
-  present: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  absent: "bg-rose-50 text-rose-700 border-rose-200",
-  late: "bg-orange-50 text-orange-700 border-orange-200",
-  half_day: "bg-amber-50 text-amber-700 border-amber-200",
-  on_leave: "bg-blue-50 text-blue-700 border-blue-200",
+  present: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  absent: "bg-rose-100 text-rose-700 border-rose-200",
+  late: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  half_day: "bg-orange-100 text-orange-700 border-orange-200",
+  on_leave: "bg-blue-100 text-blue-700 border-blue-200",
+};
+
+const statusLabels = {
+  present: "Present",
+  absent: "Absent",
+  late: "Late",
+  half_day: "Half Day",
+  on_leave: "On Leave",
 };
 
 export default function AttendanceHistory({ attendance, limit }) {

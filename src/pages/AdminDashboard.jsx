@@ -83,6 +83,8 @@ export default function AdminDashboard() {
 
   const totalEmployees = employees.filter(e => e.role === 'user').length;
   const presentToday = todayAttendance.filter(a => a.status === 'present').length;
+  const lateToday = todayAttendance.filter(a => a.status === 'late').length;
+  const absentToday = totalEmployees - todayAttendance.length;
   const pendingLeaves = leaveRequests.filter(l => l.status === 'pending').length;
   const avgHours = allAttendance.length > 0 
     ? (allAttendance.reduce((sum, a) => sum + (a.work_hours || 0), 0) / allAttendance.length).toFixed(1)
@@ -138,18 +140,17 @@ export default function AdminDashboard() {
             delay={0.2}
           />
           <StatsCard
-            title="Pending Leaves"
-            value={pendingLeaves}
-            icon={Calendar}
+            title="Late Today"
+            value={lateToday}
+            icon={AlertCircle}
             color="amber"
             delay={0.3}
           />
           <StatsCard
-            title="Avg. Hours"
-            value={avgHours}
-            subtitle="This period"
-            icon={Clock}
-            color="blue"
+            title="Absent Today"
+            value={absentToday}
+            icon={AlertCircle}
+            color="rose"
             delay={0.4}
           />
         </div>
