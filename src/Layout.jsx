@@ -1,0 +1,189 @@
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  LayoutDashboard,
+  Calendar,
+  FileText,
+  Settings,
+  LogOut,
+  Menu,
+  Users,
+  Clock,
+  ChevronRight,
+} from "lucide-react";
+
+const employeeNavItems = [
+  { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
+  { name: 'Attendance History', page: 'AttendanceHistory', icon: Clock },
+  { name: 'Leave Requests', page: 'LeaveRequests', icon: FileText },
+];
+
+const adminNavItems = [
+  { name: 'Admin Dashboard', page: 'AdminDashboard', icon: Users },
+  { name: 'My Dashboard', page: 'Dashboard', icon: LayoutDashboard },
+  { name: 'Attendance History', page: 'AttendanceHistory', icon: Clock },
+  { name: 'Leave Requests', page: 'LeaveRequests', icon: FileText },
+];
+
+export default function Layout({ children, currentPageName }) {
+  const [user, setUser] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser);
+  }, []);
+
+  const getInitials = (name) => {
+    if (!name) return "?";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  const handleLogout = () => {
+    base44.auth.logout();
+  };
+
+  const navItems = user?.role === 'admin' ? adminNavItems : employeeNavItems;
+
+  const NavLinks = ({ onClick }) => (
+    <div className="space-y-1">
+      {navItems.map((item) => {
+        const Icon = item.icon;
+        const isActive = currentPageName === item.page;
+        
+        return (
+          <Link
+            key={item.page}
+            to={createPageUrl(item.page)}
+            onClick={onClick}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+              isActive
+                ? 'bg-indigo-50 text-indigo-600 font-medium'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
+            <span>{item.name}</span>
+            {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+          </Link>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-100 p-4">
+        <div className="flex items-center gap-3 px-4 py-4 mb-6">
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+            <Clock className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-xl font-bold text-gray-900">AttendEase</span>
+        </div>
+
+        <nav className="flex-1">
+          <NavLinks />
+        </nav>
+
+        {user && (
+          <div className="border-t border-gray-100 pt-4 mt-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+                  <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
+                    <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
+                      {getInitials(user.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{user.full_name}</p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem className="text-gray-500 text-xs">
+                  {user.role === 'admin' ? 'Administrator' : 'Employee'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-rose-600">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </aside>
+
+      {/* Mobile Header */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-50">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-lg font-bold text-gray-900">AttendEase</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72 p-0">
+                <div className="p-4 border-b">
+                  {user && (
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
+                        <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
+                          {getInitials(user.full_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-gray-900">{user.full_name}</p>
+                        <p className="text-xs text-gray-500">{user.role === 'admin' ? 'Admin' : 'Employee'}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <nav className="p-4">
+                  <NavLinks onClick={() => setMobileMenuOpen(false)} />
+                </nav>
+                <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={handleLogout}
+                    className="w-full text-rose-600 border-rose-200 hover:bg-rose-50"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="lg:ml-64 pt-16 lg:pt-0">
+        {children}
+      </main>
+    </div>
+  );
+}
