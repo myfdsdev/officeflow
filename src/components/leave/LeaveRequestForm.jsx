@@ -10,9 +10,7 @@ import { Calendar, Send } from "lucide-react";
 const leaveTypes = [
   { value: "sick", label: "Sick Leave" },
   { value: "casual", label: "Casual Leave" },
-  { value: "annual", label: "Annual Leave" },
-  { value: "emergency", label: "Emergency Leave" },
-  { value: "other", label: "Other" },
+  { value: "annual", label: "Paid Leave" },
 ];
 
 export default function LeaveRequestForm({ open, onClose, onSubmit, isLoading }) {
