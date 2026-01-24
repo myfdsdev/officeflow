@@ -111,10 +111,10 @@ export default function AttendanceReports() {
   if (user.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900">Access Denied</h2>
-          <p className="text-gray-500 mt-2">You don't have permission to access this page.</p>
+        <div className="text-center p-8">
+          <AlertCircle className="w-16 h-16 text-rose-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-500">Only administrators can access attendance reports.</p>
         </div>
       </div>
     );
