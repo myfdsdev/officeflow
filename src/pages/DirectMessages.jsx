@@ -71,7 +71,7 @@ export default function DirectMessages() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (text) => {
-      return await base44.entities.Message.create({
+      const newMessage = await base44.entities.Message.create({
         sender_id: user.id,
         sender_email: user.email,
         sender_name: user.full_name,
@@ -80,8 +80,10 @@ export default function DirectMessages() {
         receiver_name: selectedUser.full_name,
         message_text: text,
       });
+      return newMessage;
     },
     onSuccess: () => {
+      // Invalidate all message queries to refresh the list
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       setMessageText('');
     },
