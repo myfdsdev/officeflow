@@ -44,20 +44,51 @@ export default function DirectMessages() {
 
           {/* Chat Area */}
           <div className="lg:col-span-2">
-            <Card className="border-0 shadow-sm h-[600px] flex items-center justify-center">
-              {selectedUser ? (
-                <div className="text-center p-8">
-                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MessageCircle className="w-8 h-8 text-indigo-600" />
+            {selectedUser ? (
+              <Card className="border-0 shadow-sm h-[600px] flex flex-col">
+                {/* Chat Header */}
+                <div className="p-4 border-b bg-white rounded-t-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <span className="text-indigo-600 font-semibold">
+                          {selectedUser.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                        </span>
+                      </div>
+                      <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${selectedUser.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{selectedUser.full_name}</h3>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                        {selectedUser.role === 'admin' && (
+                          <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">Admin</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Chat with {selectedUser.full_name}
-                  </h3>
-                  <p className="text-gray-500">
-                    Direct messaging feature coming soon
-                  </p>
                 </div>
-              ) : (
+
+                {/* Chat Content */}
+                <div className="flex-1 flex items-center justify-center bg-gray-50">
+                  <div className="text-center p-8">
+                    <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <MessageCircle className="w-8 h-8 text-indigo-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      Chat Ready
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      You can now chat with {selectedUser.full_name}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Direct messaging feature coming soon
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Card className="border-0 shadow-sm h-[600px] flex items-center justify-center">
                 <div className="text-center p-8">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <MessageCircle className="w-8 h-8 text-gray-400" />
@@ -66,11 +97,11 @@ export default function DirectMessages() {
                     Select a conversation
                   </h3>
                   <p className="text-gray-500">
-                    Choose someone from the list to start messaging
+                    Choose from Admins or Team Members to start messaging
                   </p>
                 </div>
-              )}
-            </Card>
+              </Card>
+            )}
           </div>
         </div>
       </div>

@@ -62,7 +62,7 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -10 }}
       onClick={() => onUserSelect(user)}
-      className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-left"
+      className="group w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50 transition-colors text-left"
     >
       <div className="relative">
         <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
@@ -88,6 +88,9 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
           )}
         </div>
         <p className="text-xs text-gray-500 truncate">{user.email}</p>
+      </div>
+      <div className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+        Open Chat
       </div>
     </motion.button>
   );
