@@ -74,7 +74,7 @@ export default function AttendanceHistory({ attendance, limit }) {
                   </div>
                 </div>
                 <Badge className={`${statusStyles[record.status]} border capitalize`}>
-                  {record.status?.replace("_", " ")}
+                  {statusLabels[record.status] || record.status}
                 </Badge>
               </motion.div>
             ))
