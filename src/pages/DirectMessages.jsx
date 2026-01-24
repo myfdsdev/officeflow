@@ -1,17 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DirectMessagesList from '../components/messages/DirectMessagesList';
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MessageCircle, Send } from "lucide-react";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 
 export default function DirectMessages() {
   const [user, setUser] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [messageText, setMessageText] = useState('');
+  const messagesEndRef = useRef(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     base44.auth.me().then(setUser);
   }, []);
+
+  // Fetch messages for the selected conversation
+  const { data: messages = [], isLoading: loadingMessages } = useQuery({
+    queryKey: ['messages', user?.id, selectedUser?.id],
+    queryFn: async () => {
+      if (!user || !selectedUser) return [];
+      
+      const allMessages = await base44.entities.Message.list('-created_date', 200);
+      
+      // Filter messages between current user and selected user
+      return allMessages
+        .filter(m => 
+          (m.sender_id === user.id && m.receiver_id === selectedUser.id) ||
+          (m.sender_id === selectedUser.id && m.receiver_id === user.id)
+        )
+        .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    },
+    enabled: !!user && !!selectedUser,
+    refetchInterval: 2000, // Poll every 2 seconds for new messages
+  });
+
+  // Subscribe to real-time message updates
+  useEffect(() => {
+    if (!user || !selectedUser) return;
+
+    const unsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.type === 'create') {
+        const msg = event.data;
+        // Only update if message is part of current conversation
+        if (
+          (msg.sender_id === user.id && msg.receiver_id === selectedUser.id) ||
+          (msg.sender_id === selectedUser.id && msg.receiver_id === user.id)
+        ) {
+          queryClient.invalidateQueries({ queryKey: ['messages', user.id, selectedUser.id] });
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [user, selectedUser, queryClient]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (text) => {
+      return await base44.entities.Message.create({
+        sender_id: user.id,
+        sender_email: user.email,
+        sender_name: user.full_name,
+        receiver_id: selectedUser.id,
+        receiver_email: selectedUser.email,
+        receiver_name: selectedUser.full_name,
+        message_text: text,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      setMessageText('');
+    },
+  });
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (messageText.trim() && !sendMessageMutation.isPending) {
+      sendMessageMutation.mutate(messageText.trim());
+    }
+  };
 
   if (!user) {
     return (
@@ -69,23 +146,70 @@ export default function DirectMessages() {
                   </div>
                 </div>
 
-                {/* Chat Content */}
-                <div className="flex-1 flex items-center justify-center bg-gray-50">
-                  <div className="text-center p-8">
-                    <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MessageCircle className="w-8 h-8 text-indigo-600" />
+                {/* Messages Area */}
+                <div className="flex-1 overflow-y-auto bg-gray-50 p-4 space-y-4">
+                  {loadingMessages ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-pulse text-gray-400">Loading messages...</div>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      Chat Ready
-                    </h3>
-                    <p className="text-gray-500 mb-4">
-                      You can now chat with {selectedUser.full_name}
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      Direct messaging feature coming soon
-                    </p>
-                  </div>
+                  ) : messages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-400">No messages yet</p>
+                        <p className="text-sm text-gray-400">Start the conversation!</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {messages.map((msg) => {
+                        const isSender = msg.sender_id === user.id;
+                        return (
+                          <motion.div
+                            key={msg.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div className={`max-w-[70%] ${isSender ? 'order-2' : 'order-1'}`}>
+                              <div className={`rounded-2xl px-4 py-2 ${
+                                isSender 
+                                  ? 'bg-indigo-600 text-white' 
+                                  : 'bg-white text-gray-900'
+                              }`}>
+                                <p className="text-sm break-words">{msg.message_text}</p>
+                              </div>
+                              <p className={`text-xs text-gray-400 mt-1 ${isSender ? 'text-right' : 'text-left'}`}>
+                                {format(new Date(msg.created_date), 'h:mm a')}
+                              </p>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                      <div ref={messagesEndRef} />
+                    </>
+                  )}
                 </div>
+
+                {/* Message Input */}
+                <form onSubmit={handleSendMessage} className="p-4 border-t bg-white rounded-b-xl">
+                  <div className="flex gap-2">
+                    <Input
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      placeholder="Type a message..."
+                      className="flex-1"
+                      disabled={sendMessageMutation.isPending}
+                    />
+                    <Button
+                      type="submit"
+                      disabled={!messageText.trim() || sendMessageMutation.isPending}
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </form>
               </Card>
             ) : (
               <Card className="border-0 shadow-sm h-[600px] flex items-center justify-center">
