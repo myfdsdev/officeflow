@@ -23,7 +23,9 @@ import {
   Clock,
   ChevronRight,
   UserCircle,
+  BarChart3,
 } from "lucide-react";
+import NotificationBell from './components/notifications/NotificationBell';
 
 const employeeNavItems = [
   { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
@@ -34,6 +36,7 @@ const employeeNavItems = [
 
 const adminNavItems = [
   { name: 'Admin Dashboard', page: 'AdminDashboard', icon: Users },
+  { name: 'Attendance Reports', page: 'AttendanceReports', icon: BarChart3 },
   { name: 'My Dashboard', page: 'Dashboard', icon: LayoutDashboard },
   { name: 'Attendance History', page: 'AttendanceHistory', icon: Clock },
   { name: 'Leave Requests', page: 'LeaveRequests', icon: FileText },
@@ -146,6 +149,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {user && <NotificationBell userEmail={user.email} />}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">

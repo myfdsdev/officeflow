@@ -64,20 +64,75 @@ export default function AdminDashboard() {
   });
 
   const approveLeave = useMutation({
-    mutationFn: (request) => base44.entities.LeaveRequest.update(request.id, {
-      status: 'approved',
-      reviewed_by: user.email,
-      reviewed_at: new Date().toISOString(),
-    }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leaveRequests'] }),
+    mutationFn: async (request) => {
+      // Update leave request
+      const updated = await base44.entities.LeaveRequest.update(request.id, {
+        status: 'approved',
+        reviewed_by: user.email,
+        reviewed_at: new Date().toISOString(),
+      });
+
+      // Create attendance records for approved leave dates
+      const startDate = new Date(request.start_date);
+      const endDate = new Date(request.end_date);
+      
+      for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // Check if attendance already exists for this date
+        const existing = await base44.entities.Attendance.filter({
+          employee_email: request.employee_email,
+          date: dateStr,
+        });
+
+        if (existing.length === 0) {
+          await base44.entities.Attendance.create({
+            employee_id: request.employee_id,
+            employee_email: request.employee_email,
+            employee_name: request.employee_name,
+            date: dateStr,
+            status: 'on_leave',
+            notes: `Leave: ${request.leave_type}`,
+          });
+        }
+      }
+
+      // Send notification to employee
+      await base44.entities.Notification.create({
+        user_email: request.employee_email,
+        title: 'Leave Request Approved',
+        message: `Your ${request.leave_type} leave from ${request.start_date} to ${request.end_date} has been approved.`,
+        type: 'leave_approved',
+        related_id: request.id,
+      });
+
+      return updated;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leaveRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['allAttendance'] });
+    },
   });
 
   const rejectLeave = useMutation({
-    mutationFn: (request) => base44.entities.LeaveRequest.update(request.id, {
-      status: 'rejected',
-      reviewed_by: user.email,
-      reviewed_at: new Date().toISOString(),
-    }),
+    mutationFn: async (request) => {
+      const updated = await base44.entities.LeaveRequest.update(request.id, {
+        status: 'rejected',
+        reviewed_by: user.email,
+        reviewed_at: new Date().toISOString(),
+      });
+
+      // Send notification to employee
+      await base44.entities.Notification.create({
+        user_email: request.employee_email,
+        title: 'Leave Request Rejected',
+        message: `Your ${request.leave_type} leave from ${request.start_date} to ${request.end_date} has been rejected.`,
+        type: 'leave_rejected',
+        related_id: request.id,
+      });
+
+      return updated;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leaveRequests'] }),
   });
 

@@ -37,7 +37,7 @@ export default function Dashboard() {
   const todayAttendance = myAttendance.find(a => a.date === today);
 
   const clockInMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const now = new Date();
       const clockInTime = format(now, 'HH:mm');
       const hours = now.getHours();
@@ -53,7 +53,7 @@ export default function Dashboard() {
         status = 'late';
       }
       
-      return base44.entities.Attendance.create({
+      const attendance = await base44.entities.Attendance.create({
         employee_id: user.id,
         employee_email: user.email,
         employee_name: user.full_name,
@@ -61,6 +61,23 @@ export default function Dashboard() {
         clock_in: clockInTime,
         status: status,
       });
+
+      // Get all admins
+      const allUsers = await base44.entities.User.list();
+      const admins = allUsers.filter(u => u.role === 'admin');
+
+      // Send notification to all admins
+      for (const admin of admins) {
+        await base44.entities.Notification.create({
+          user_email: admin.email,
+          title: 'Employee Checked In',
+          message: `${user.full_name} has checked in at ${clockInTime} (${status})`,
+          type: 'check_in',
+          related_id: attendance.id,
+        });
+      }
+
+      return attendance;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myAttendance'] }),
   });

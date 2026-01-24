@@ -6,6 +6,7 @@ import LeaveRequests from './pages/LeaveRequests';
 import CompleteProfile from './pages/CompleteProfile';
 import MyProfile from './pages/MyProfile';
 import Welcome from './pages/Welcome';
+import AttendanceReports from './pages/AttendanceReports';
 import __Layout from './Layout.jsx';
 
 
@@ -18,6 +19,7 @@ export const PAGES = {
     "CompleteProfile": CompleteProfile,
     "MyProfile": MyProfile,
     "Welcome": Welcome,
+    "AttendanceReports": AttendanceReports,
 }
 
 export const pagesConfig = {
