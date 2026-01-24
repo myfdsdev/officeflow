@@ -35,9 +35,10 @@ const employeeNavItems = [
 ];
 
 const adminNavItems = [
-  { name: 'Admin Dashboard', page: 'AdminDashboard', icon: Users },
+  { name: 'Admin Dashboard', page: 'AdminDashboard', icon: LayoutDashboard },
   { name: 'Attendance Reports', page: 'AttendanceReports', icon: BarChart3 },
-  { name: 'My Dashboard', page: 'Dashboard', icon: LayoutDashboard },
+  { name: 'Settings', page: 'Settings', icon: Settings },
+  { name: 'My Dashboard', page: 'Dashboard', icon: Users },
   { name: 'Attendance History', page: 'AttendanceHistory', icon: Clock },
   { name: 'Leave Requests', page: 'LeaveRequests', icon: FileText },
   { name: 'My Profile', page: 'MyProfile', icon: UserCircle },
@@ -61,30 +62,73 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const navItems = user?.role === 'admin' ? adminNavItems : employeeNavItems;
+  const isAdminSection = currentPageName === 'AdminDashboard' || currentPageName === 'AttendanceReports' || currentPageName === 'Settings';
 
   const NavLinks = ({ onClick }) => (
-    <div className="space-y-1">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = currentPageName === item.page;
-        
-        return (
-          <Link
-            key={item.page}
-            to={createPageUrl(item.page)}
-            onClick={onClick}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              isActive
-                ? 'bg-indigo-50 text-indigo-600 font-medium'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-            }`}
-          >
-            <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-            <span>{item.name}</span>
-            {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
-          </Link>
-        );
-      })}
+    <div className="space-y-4">
+      {/* Admin Section */}
+      {user?.role === 'admin' && (
+        <div>
+          <div className="px-4 py-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin Panel</p>
+          </div>
+          <div className="space-y-1">
+            {adminNavItems.slice(0, 3).map((item) => {
+              const Icon = item.icon;
+              const isActive = currentPageName === item.page;
+              
+              return (
+                <Link
+                  key={item.page}
+                  to={createPageUrl(item.page)}
+                  onClick={onClick}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-indigo-50 text-indigo-600 font-medium'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
+                  <span>{item.name}</span>
+                  {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Personal Section */}
+      <div>
+        {user?.role === 'admin' && (
+          <div className="px-4 py-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">My Account</p>
+          </div>
+        )}
+        <div className="space-y-1">
+          {(user?.role === 'admin' ? adminNavItems.slice(3) : employeeNavItems).map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPageName === item.page;
+            
+            return (
+              <Link
+                key={item.page}
+                to={createPageUrl(item.page)}
+                onClick={onClick}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? 'bg-indigo-50 text-indigo-600 font-medium'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
+                <span>{item.name}</span>
+                {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 

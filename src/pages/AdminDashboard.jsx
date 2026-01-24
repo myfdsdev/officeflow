@@ -139,11 +139,9 @@ export default function AdminDashboard() {
   const totalEmployees = employees.filter(e => e.role === 'user').length;
   const presentToday = todayAttendance.filter(a => a.status === 'present').length;
   const lateToday = todayAttendance.filter(a => a.status === 'late').length;
+  const halfDayToday = todayAttendance.filter(a => a.status === 'half_day').length;
   const absentToday = totalEmployees - todayAttendance.length;
   const pendingLeaves = leaveRequests.filter(l => l.status === 'pending').length;
-  const avgHours = allAttendance.length > 0 
-    ? (allAttendance.reduce((sum, a) => sum + (a.work_hours || 0), 0) / allAttendance.length).toFixed(1)
-    : '0';
 
   if (!user) {
     return (
@@ -166,20 +164,19 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-500 mt-1">Manage employees, attendance, and leave requests</p>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-500 mt-1">Comprehensive attendance and leave management</p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Today's Overview Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <StatsCard
             title="Total Employees"
             value={totalEmployees}
@@ -188,25 +185,32 @@ export default function AdminDashboard() {
             delay={0.1}
           />
           <StatsCard
-            title="Present Today"
+            title="Present"
             value={presentToday}
             icon={CheckCircle2}
             color="green"
             delay={0.2}
           />
           <StatsCard
-            title="Late Today"
+            title="Late"
             value={lateToday}
-            icon={AlertCircle}
+            icon={Clock}
             color="amber"
             delay={0.3}
           />
           <StatsCard
-            title="Absent Today"
+            title="Half Day"
+            value={halfDayToday}
+            icon={Clock}
+            color="blue"
+            delay={0.4}
+          />
+          <StatsCard
+            title="Absent"
             value={absentToday}
             icon={AlertCircle}
             color="rose"
-            delay={0.4}
+            delay={0.5}
           />
         </div>
 
