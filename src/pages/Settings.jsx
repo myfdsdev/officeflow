@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 
 export default function Settings() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState({
     office_start_time: '09:00',
     office_end_time: '18:00',
@@ -19,7 +20,12 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setUser);
+    base44.auth.me().then((userData) => {
+      setUser(userData);
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
   }, []);
 
   const handleSave = async () => {
@@ -31,7 +37,7 @@ export default function Settings() {
     }, 1000);
   };
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-pulse text-gray-400">Loading...</div>
@@ -39,7 +45,7 @@ export default function Settings() {
     );
   }
 
-  if (user.role !== 'admin') {
+  if (!user || user.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-8">

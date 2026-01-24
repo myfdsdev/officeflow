@@ -37,6 +37,16 @@ export default function Dashboard() {
 
   const clockInMutation = useMutation({
     mutationFn: async () => {
+      // Check for duplicate attendance
+      const existingAttendance = await base44.entities.Attendance.filter({
+        employee_email: user.email,
+        date: today
+      });
+
+      if (existingAttendance.length > 0) {
+        throw new Error('Attendance already marked for today');
+      }
+
       const now = new Date();
       const clockInTime = format(now, 'HH:mm');
       const hours = now.getHours();
@@ -97,7 +107,13 @@ export default function Dashboard() {
 
       return attendance;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myAttendance'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myAttendance'] });
+      alert('Check-in successful! ✓');
+    },
+    onError: (error) => {
+      alert(error.message || 'Failed to check in. Please try again.');
+    },
   });
 
   const clockOutMutation = useMutation({
@@ -133,7 +149,13 @@ export default function Dashboard() {
 
       return updated;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myAttendance'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myAttendance'] });
+      alert('Check-out successful! ✓');
+    },
+    onError: (error) => {
+      alert(error.message || 'Failed to check out. Please try again.');
+    },
   });
 
   const leaveRequestMutation = useMutation({

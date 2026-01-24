@@ -13,9 +13,15 @@ import { motion } from "framer-motion";
 export default function AttendanceReports() {
   const [user, setUser] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    base44.auth.me().then(setUser);
+    base44.auth.me().then((userData) => {
+      setUser(userData);
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
   }, []);
 
   const { data: employees = [] } = useQuery({
@@ -100,7 +106,7 @@ export default function AttendanceReports() {
     a.remove();
   };
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-pulse text-gray-400">Loading...</div>
@@ -108,7 +114,7 @@ export default function AttendanceReports() {
     );
   }
 
-  if (user.role !== 'admin') {
+  if (!user || user.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-8">

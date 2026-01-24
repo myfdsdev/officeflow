@@ -50,6 +50,10 @@ export default function AdminDashboard() {
 
   const editAttendanceMutation = useMutation({
     mutationFn: ({ id, data }) => {
+      if (!user || user.role !== 'admin') {
+        throw new Error('Only admins can edit attendance');
+      }
+
       let workHours = null;
       if (data.clock_in && data.clock_out) {
         const clockInTime = data.clock_in.split(':');
@@ -60,11 +64,21 @@ export default function AdminDashboard() {
       }
       return base44.entities.Attendance.update(id, { ...data, work_hours: workHours });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['allAttendance'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allAttendance'] });
+      alert('Attendance updated successfully');
+    },
+    onError: (error) => {
+      alert(error.message || 'Failed to update attendance');
+    },
   });
 
   const approveLeave = useMutation({
     mutationFn: async (request) => {
+      if (!user || user.role !== 'admin') {
+        throw new Error('Only admins can approve leave requests');
+      }
+
       // Update leave request
       const updated = await base44.entities.LeaveRequest.update(request.id, {
         status: 'approved',
@@ -116,6 +130,10 @@ export default function AdminDashboard() {
 
   const rejectLeave = useMutation({
     mutationFn: async (request) => {
+      if (!user || user.role !== 'admin') {
+        throw new Error('Only admins can reject leave requests');
+      }
+
       const updated = await base44.entities.LeaveRequest.update(request.id, {
         status: 'rejected',
         reviewed_by: user.email,
