@@ -69,6 +69,17 @@ export default function CompleteProfile() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.mobile_number || !formData.employee_id) {
+      alert('Please fill in mobile number and employee ID');
+      return;
+    }
+
+    if (!formData.department) {
+      alert('Please select your department');
+      return;
+    }
+
     updateProfileMutation.mutate(formData);
   };
 
