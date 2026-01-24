@@ -12,6 +12,7 @@ import StatsCard from '../components/attendance/StatsCard';
 import EmployeeList from '../components/admin/EmployeeList';
 import AttendanceReportTable from '../components/admin/AttendanceReportTable';
 import LeaveRequestList from '../components/leave/LeaveRequestList';
+import InviteUserDialog from '../components/admin/InviteUserDialog';
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
@@ -19,6 +20,7 @@ export default function AdminDashboard() {
     start: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
     end: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
   });
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -274,6 +276,18 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="employees">
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-sm text-gray-500">
+                {totalEmployees} team member{totalEmployees !== 1 ? 's' : ''} • {onlineUsers} online
+              </p>
+              <Button
+                onClick={() => setInviteDialogOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Invite Team Member
+              </Button>
+            </div>
             <EmployeeList employees={employees} todayAttendance={todayAttendance} />
           </TabsContent>
 
@@ -314,6 +328,12 @@ export default function AdminDashboard() {
             />
           </TabsContent>
         </Tabs>
+
+        {/* Invite User Dialog */}
+        <InviteUserDialog
+          open={inviteDialogOpen}
+          onOpenChange={setInviteDialogOpen}
+        />
       </div>
     </div>
   );
