@@ -19,10 +19,13 @@ export default function Welcome() {
         setUser(userData);
         
         // If user has basic profile info, redirect to dashboard
-        if (userData.mobile_number && userData.employee_id) {
+        if (userData.mobile_number && userData.employee_id && userData.department) {
           window.location.href = userData.role === 'admin' 
             ? createPageUrl('AdminDashboard') 
             : createPageUrl('Dashboard');
+        } else if (userData) {
+          // Profile incomplete - redirect to complete profile
+          window.location.href = createPageUrl('CompleteProfile');
         }
       } catch (error) {
         // User not logged in

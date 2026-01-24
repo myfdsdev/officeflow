@@ -126,6 +126,43 @@ export default function DirectMessages() {
     );
   }
 
+  // If profile is incomplete, show message
+  const isProfileComplete = user.mobile_number && user.employee_id && user.department;
+  if (!isProfileComplete) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-bold text-gray-900">Direct Messages</h1>
+            <p className="text-gray-500 mt-1">Connect with your team</p>
+          </motion.div>
+
+          <Card className="max-w-2xl mx-auto border-0 shadow-sm">
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-amber-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Profile First</h2>
+              <p className="text-gray-600 mb-6">
+                To access the messaging feature and connect with your team, please complete your profile by adding your mobile number, employee ID, and department.
+              </p>
+              <Button
+                onClick={() => window.location.href = createPageUrl('CompleteProfile')}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                Complete Profile
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
