@@ -5,9 +5,10 @@ import DirectMessagesList from '../components/messages/DirectMessagesList';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { createPageUrl } from "@/utils";
 
 export default function DirectMessages() {
   const [user, setUser] = useState(null);
@@ -98,6 +99,29 @@ export default function DirectMessages() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-pulse text-gray-400">Loading...</div>
+      </div>
+    );
+  }
+
+  // If user is not admin or team member, deny access
+  if (user.role !== 'admin' && user.role !== 'user') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-rose-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-600 mb-6">
+            You don't have permission to access the messaging feature.
+          </p>
+          <Button
+            onClick={() => window.location.href = createPageUrl('Dashboard')}
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
+            Go to Dashboard
+          </Button>
+        </Card>
       </div>
     );
   }
