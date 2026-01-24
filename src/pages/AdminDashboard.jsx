@@ -5,7 +5,7 @@ import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, FileSpreadsheet, Calendar, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Users, FileSpreadsheet, Calendar, Clock, CheckCircle2, AlertCircle, Wifi } from "lucide-react";
 import { motion } from "framer-motion";
 
 import StatsCard from '../components/attendance/StatsCard';
@@ -30,6 +30,17 @@ export default function AdminDashboard() {
     queryKey: ['employees'],
     queryFn: () => base44.entities.User.list(),
   });
+
+  // Subscribe to real-time user updates
+  useEffect(() => {
+    const unsubscribe = base44.entities.User.subscribe((event) => {
+      if (event.type === 'update') {
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+      }
+    });
+
+    return unsubscribe;
+  }, [queryClient]);
 
   const { data: allAttendance = [], isLoading: loadingAttendance } = useQuery({
     queryKey: ['allAttendance', dateRange],
@@ -155,6 +166,7 @@ export default function AdminDashboard() {
   });
 
   const totalEmployees = employees.filter(e => e.role === 'user').length;
+  const onlineUsers = employees.filter(e => e.is_online).length;
   const presentToday = todayAttendance.filter(a => a.status === 'present').length;
   const lateToday = todayAttendance.filter(a => a.status === 'late').length;
   const halfDayToday = todayAttendance.filter(a => a.status === 'half_day').length;
@@ -194,7 +206,7 @@ export default function AdminDashboard() {
         </motion.div>
 
         {/* Today's Overview Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <StatsCard
             title="Total Employees"
             value={totalEmployees}
@@ -203,10 +215,18 @@ export default function AdminDashboard() {
             delay={0.1}
           />
           <StatsCard
+            title="Online Now"
+            value={onlineUsers}
+            subtitle={`${totalEmployees - onlineUsers} offline`}
+            icon={Wifi}
+            color="green"
+            delay={0.15}
+          />
+          <StatsCard
             title="Present"
             value={presentToday}
             icon={CheckCircle2}
-            color="green"
+            color="emerald"
             delay={0.2}
           />
           <StatsCard

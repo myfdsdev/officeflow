@@ -1,17 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 import { Users, Mail, Shield, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import OnlineStatusIndicator from './OnlineStatusIndicator';
 
 export default function EmployeeList({ employees, todayAttendance = [] }) {
+  const [onlineUsers, setOnlineUsers] = useState([]);
+
+  useEffect(() => {
+    // Initial state from props
+    setOnlineUsers(employees);
+
+    // Subscribe to real-time user updates
+    const unsubscribe = base44.entities.User.subscribe((event) => {
+      if (event.type === 'update') {
+        setOnlineUsers(prev => 
+          prev.map(u => u.id === event.id ? event.data : u)
+        );
+      }
+    });
+
+    return unsubscribe;
+  }, [employees]);
+
   const getInitials = (name) => {
     if (!name) return "?";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  const getUserOnlineStatus = (email) => {
+    const user = onlineUsers.find(u => u.email === email);
+    return user?.is_online || false;
   };
 
   const getTodayStatus = (email) => {
@@ -43,6 +67,7 @@ export default function EmployeeList({ employees, todayAttendance = [] }) {
           ) : (
             employees.map((employee, index) => {
               const status = getTodayStatus(employee.email);
+              const isOnline = getUserOnlineStatus(employee.email);
               
               return (
                 <motion.div
@@ -56,15 +81,20 @@ export default function EmployeeList({ employees, todayAttendance = [] }) {
                     className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors block"
                   >
                     <div className="flex items-center gap-4">
-                      <Avatar className="w-12 h-12 bg-indigo-100 text-indigo-600">
-                        {employee.profile_photo ? (
-                          <AvatarImage src={employee.profile_photo} alt={employee.full_name} />
-                        ) : (
-                          <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
-                            {getInitials(employee.full_name)}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="w-12 h-12 bg-indigo-100 text-indigo-600">
+                          {employee.profile_photo ? (
+                            <AvatarImage src={employee.profile_photo} alt={employee.full_name} />
+                          ) : (
+                            <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
+                              {getInitials(employee.full_name)}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="absolute -bottom-1 -right-1">
+                          <OnlineStatusIndicator isOnline={isOnline} size="md" />
+                        </div>
+                      </div>
                       <div>
                         <p className="font-medium text-gray-900">{employee.full_name}</p>
                         <p className="text-sm text-gray-500 flex items-center gap-1">
