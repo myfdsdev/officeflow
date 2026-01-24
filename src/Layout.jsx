@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +22,14 @@ import {
   Users,
   Clock,
   ChevronRight,
+  UserCircle,
 } from "lucide-react";
 
 const employeeNavItems = [
   { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
   { name: 'Attendance History', page: 'AttendanceHistory', icon: Clock },
   { name: 'Leave Requests', page: 'LeaveRequests', icon: FileText },
+  { name: 'My Profile', page: 'MyProfile', icon: UserCircle },
 ];
 
 const adminNavItems = [
@@ -35,6 +37,7 @@ const adminNavItems = [
   { name: 'My Dashboard', page: 'Dashboard', icon: LayoutDashboard },
   { name: 'Attendance History', page: 'AttendanceHistory', icon: Clock },
   { name: 'Leave Requests', page: 'LeaveRequests', icon: FileText },
+  { name: 'My Profile', page: 'MyProfile', icon: UserCircle },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -103,9 +106,13 @@ export default function Layout({ children, currentPageName }) {
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors">
                   <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
-                    <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
-                      {getInitials(user.full_name)}
-                    </AvatarFallback>
+                    {user.profile_photo ? (
+                      <AvatarImage src={user.profile_photo} alt={user.full_name} />
+                    ) : (
+                      <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
+                        {getInitials(user.full_name)}
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                   <div className="text-left flex-1 min-w-0">
                     <p className="font-medium text-gray-900 truncate">{user.full_name}</p>
@@ -150,9 +157,13 @@ export default function Layout({ children, currentPageName }) {
                   {user && (
                     <div className="flex items-center gap-3">
                       <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
-                        <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
-                          {getInitials(user.full_name)}
-                        </AvatarFallback>
+                        {user.profile_photo ? (
+                          <AvatarImage src={user.profile_photo} alt={user.full_name} />
+                        ) : (
+                          <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold">
+                            {getInitials(user.full_name)}
+                          </AvatarFallback>
+                        )}
                       </Avatar>
                       <div>
                         <p className="font-medium text-gray-900">{user.full_name}</p>
