@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Mail, Shield, User, Clock, CheckCircle2, XCircle, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -104,9 +104,13 @@ export default function EmployeeDetails() {
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <Avatar className="w-24 h-24 bg-indigo-100 text-indigo-600">
-                  <AvatarFallback className="bg-indigo-100 text-indigo-600 text-2xl font-semibold">
-                    {getInitials(employee.full_name)}
-                  </AvatarFallback>
+                  {employee.profile_photo ? (
+                    <AvatarImage src={employee.profile_photo} alt={employee.full_name} />
+                  ) : (
+                    <AvatarFallback className="bg-indigo-100 text-indigo-600 text-2xl font-semibold">
+                      {getInitials(employee.full_name)}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="text-center md:text-left">
                   <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -116,6 +120,9 @@ export default function EmployeeDetails() {
                     <Mail className="w-4 h-4" />
                     {employee.email}
                   </p>
+                  {employee.department && (
+                    <p className="text-gray-500 text-sm mt-1">{employee.department} • {employee.employee_id}</p>
+                  )}
                   <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                     {employee.role === 'admin' ? (
                       <span className="inline-flex items-center px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-sm font-medium">

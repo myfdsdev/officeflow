@@ -5,6 +5,7 @@ import AttendanceHistory from './pages/AttendanceHistory';
 import LeaveRequests from './pages/LeaveRequests';
 import CompleteProfile from './pages/CompleteProfile';
 import MyProfile from './pages/MyProfile';
+import Welcome from './pages/Welcome';
 import __Layout from './Layout.jsx';
 
 
@@ -16,6 +17,7 @@ export const PAGES = {
     "LeaveRequests": LeaveRequests,
     "CompleteProfile": CompleteProfile,
     "MyProfile": MyProfile,
+    "Welcome": Welcome,
 }
 
 export const pagesConfig = {

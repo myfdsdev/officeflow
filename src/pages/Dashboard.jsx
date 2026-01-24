@@ -99,12 +99,14 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex items-center gap-4"
         >
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Welcome back, {user.full_name?.split(' ')[0]}
-          </h1>
-          <p className="text-gray-500 mt-1">Track your attendance and manage your leave requests</p>
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              Welcome back, {user.full_name?.split(' ')[0]}
+            </h1>
+            <p className="text-gray-500 mt-1">Track your attendance and manage your leave requests</p>
+          </div>
         </motion.div>
 
         <div className="mb-8">
