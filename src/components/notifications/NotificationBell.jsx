@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell } from 'lucide-react';
@@ -18,10 +18,26 @@ export default function NotificationBell({ userEmail }) {
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', userEmail],
-    queryFn: () => base44.entities.Notification.filter({ user_email: userEmail }, '-created_date', 20),
+    queryFn: () => base44.entities.Notification.filter({ user_email: userEmail }, '-created_date', 50),
     enabled: !!userEmail,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 5000, // Refetch every 5 seconds
   });
+
+  // Real-time subscription for notifications
+  useEffect(() => {
+    if (!userEmail) return;
+
+    const unsubscribe = base44.entities.Notification.subscribe((event) => {
+      if (event.type === 'create') {
+        const notif = event.data;
+        if (notif.user_email === userEmail) {
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [userEmail, queryClient]);
 
   const markAsReadMutation = useMutation({
     mutationFn: (id) => base44.entities.Notification.update(id, { is_read: true }),

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, ChevronDown, ChevronRight, Shield, User } from "lucide-react";
 import OnlineStatusIndicator from '../admin/OnlineStatusIndicator';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function DirectMessagesList({ currentUser, onUserSelect }) {
   const [users, setUsers] = useState([]);
@@ -68,6 +69,18 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
     }));
   };
 
+  const getLastSeenText = (user) => {
+    if (user.is_online) return 'Online';
+    if (user.last_active_time) {
+      try {
+        return `Last seen ${formatDistanceToNow(new Date(user.last_active_time), { addSuffix: true })}`;
+      } catch (e) {
+        return 'Offline';
+      }
+    }
+    return 'Offline';
+  };
+
   // Group users by role
   const admins = users.filter(u => u.role === 'admin');
   const teamMembers = users.filter(u => u.role === 'user');
@@ -104,10 +117,10 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
             <Badge variant="outline" className="text-xs">You</Badge>
           )}
         </div>
-        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+        <p className="text-xs text-gray-500 truncate">{getLastSeenText(user)}</p>
       </div>
       <div className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-        Open Chat
+        Chat
       </div>
     </motion.button>
   );

@@ -2,18 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DirectMessagesList from '../components/messages/DirectMessagesList';
+import BroadcastMessageDialog from '../components/messages/BroadcastMessageDialog';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send, AlertCircle } from "lucide-react";
+import { MessageCircle, Send, Megaphone } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { createPageUrl } from "@/utils";
 
 export default function DirectMessages() {
   const [user, setUser] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState('');
+  const [showBroadcast, setShowBroadcast] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -22,7 +23,7 @@ export default function DirectMessages() {
       const userData = await base44.auth.me();
       setUser(userData);
       
-      // Mark all message notifications as read when Direct Messages page is opened
+      // Mark message notifications as read when page opens
       if (userData) {
         try {
           const notifications = await base44.entities.Notification.filter({
@@ -31,7 +32,6 @@ export default function DirectMessages() {
             type: 'new_message'
           });
           
-          // Mark all message notifications as read
           for (const notif of notifications) {
             await base44.entities.Notification.update(notif.id, { is_read: true });
           }
@@ -50,38 +50,34 @@ export default function DirectMessages() {
     queryFn: async () => {
       if (!user || !selectedUser) return [];
       
-      // Fetch all messages and filter in memory
-      const allMessages = await base44.entities.Message.list('-created_date', 500);
+      const allMessages = await base44.entities.Message.list('-created_date', 1000);
       
-      // Filter messages between current user and selected user
       const conversationMessages = allMessages.filter(m => 
         (m.sender_id === user.id && m.receiver_id === selectedUser.id) ||
         (m.sender_id === selectedUser.id && m.receiver_id === user.id)
       );
       
-      // Sort by created_date ascending (oldest first)
       return conversationMessages.sort((a, b) => 
         new Date(a.created_date) - new Date(b.created_date)
       );
     },
     enabled: !!user && !!selectedUser,
-    refetchInterval: 3000, // Poll every 3 seconds for new messages
+    refetchInterval: 3000,
   });
 
-  // Subscribe to real-time message updates
+  // Real-time message subscription
   useEffect(() => {
     if (!user) return;
 
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         const msg = event.data;
-        // Update if message involves current user (as sender or receiver)
         if (msg.sender_id === user.id || msg.receiver_id === user.id) {
-          // Invalidate all message queries to refresh all conversations
           queryClient.invalidateQueries({ queryKey: ['messages'] });
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
           
-          // Mark message as read if it's for the current user
-          if (msg.receiver_id === user.id && !msg.is_read) {
+          // Mark as read if from selected user
+          if (msg.receiver_id === user.id && msg.sender_id === selectedUser?.id && !msg.is_read) {
             base44.entities.Message.update(msg.id, { is_read: true }).catch(console.error);
           }
         }
@@ -89,45 +85,9 @@ export default function DirectMessages() {
     });
 
     return unsubscribe;
-  }, [user, queryClient]);
+  }, [user, selectedUser, queryClient]);
 
-  // Auto-select user if only one conversation exists
-  useEffect(() => {
-    const autoSelectUser = async () => {
-      if (!user || selectedUser) return;
-
-      try {
-        // Fetch all messages involving current user
-        const allMessages = await base44.entities.Message.list('-created_date', 1000);
-        const userMessages = allMessages.filter(m => 
-          m.sender_id === user.id || m.receiver_id === user.id
-        );
-
-        // Extract unique user IDs
-        const userIdsSet = new Set();
-        userMessages.forEach(m => {
-          if (m.sender_id !== user.id) userIdsSet.add(m.sender_id);
-          if (m.receiver_id !== user.id) userIdsSet.add(m.receiver_id);
-        });
-
-        // If only one conversation exists, auto-open it
-        if (userIdsSet.size === 1) {
-          const userId = Array.from(userIdsSet)[0];
-          const allUsers = await base44.entities.User.list();
-          const targetUser = allUsers.find(u => u.id === userId);
-          if (targetUser) {
-            setSelectedUser(targetUser);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to auto-select user:', error);
-      }
-    };
-
-    autoSelectUser();
-  }, [user, selectedUser]);
-
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -144,18 +104,27 @@ export default function DirectMessages() {
         message_text: text,
         is_read: false,
       });
+
+      // Create notification for receiver
+      await base44.entities.Notification.create({
+        user_email: selectedUser.email,
+        title: 'New Message',
+        message: `${user.full_name}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`,
+        type: 'new_message',
+        is_read: false,
+      });
+
       return newMessage;
     },
     onSuccess: () => {
-      // Invalidate all message queries to refresh the list
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       setMessageText('');
     },
   });
 
-  // Mark messages as read when conversation is opened
+  // Mark messages as read when conversation opened
   useEffect(() => {
-    const markMessagesAsRead = async () => {
+    const markAsRead = async () => {
       if (!user || !selectedUser) return;
 
       try {
@@ -166,7 +135,6 @@ export default function DirectMessages() {
           !m.is_read
         );
 
-        // Mark all unread messages from this user as read
         for (const msg of unreadMessages) {
           await base44.entities.Message.update(msg.id, { is_read: true });
         }
@@ -175,7 +143,7 @@ export default function DirectMessages() {
       }
     };
 
-    markMessagesAsRead();
+    markAsRead();
   }, [user, selectedUser]);
 
   const handleSendMessage = (e) => {
@@ -193,76 +161,27 @@ export default function DirectMessages() {
     );
   }
 
-  // If user is not admin or team member, deny access
-  if (user.role !== 'admin' && user.role !== 'user') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-rose-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600 mb-6">
-            You don't have permission to access the messaging feature.
-          </p>
-          <Button
-            onClick={() => window.location.href = createPageUrl('Dashboard')}
-            className="bg-indigo-600 hover:bg-indigo-700"
-          >
-            Go to Dashboard
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
-  // If profile is incomplete, show message
-  const isProfileComplete = user.mobile_number && user.employee_id && user.department;
-  if (!isProfileComplete) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50">
-        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <h1 className="text-3xl font-bold text-gray-900">Direct Messages</h1>
-            <p className="text-gray-500 mt-1">Connect with your team</p>
-          </motion.div>
-
-          <Card className="max-w-2xl mx-auto border-0 shadow-sm">
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-amber-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Profile First</h2>
-              <p className="text-gray-600 mb-6">
-                To access the messaging feature and connect with your team, please complete your profile by adding your mobile number, employee ID, and department.
-              </p>
-              <Button
-                onClick={() => window.location.href = createPageUrl('CompleteProfile')}
-                className="bg-indigo-600 hover:bg-indigo-700"
-              >
-                Complete Profile
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex items-center justify-between"
         >
-          <h1 className="text-3xl font-bold text-gray-900">Direct Messages</h1>
-          <p className="text-gray-500 mt-1">Connect with your team</p>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Direct Messages</h1>
+            <p className="text-gray-500 mt-1">Connect with your team</p>
+          </div>
+          {user.role === 'admin' && (
+            <Button
+              onClick={() => setShowBroadcast(true)}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              <Megaphone className="w-4 h-4 mr-2" />
+              Broadcast
+            </Button>
+          )}
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -292,7 +211,9 @@ export default function DirectMessages() {
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{selectedUser.full_name}</h3>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                        <p className="text-sm text-gray-500">
+                          {selectedUser.is_online ? 'Online' : 'Offline'}
+                        </p>
                         {selectedUser.role === 'admin' && (
                           <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">Admin</span>
                         )}
@@ -319,6 +240,8 @@ export default function DirectMessages() {
                     <>
                       {messages.map((msg) => {
                         const isSender = msg.sender_id === user.id;
+                        const isBroadcast = msg.message_text.startsWith('📢 BROADCAST:');
+                        
                         return (
                           <motion.div
                             key={msg.id}
@@ -328,9 +251,11 @@ export default function DirectMessages() {
                           >
                             <div className={`max-w-[70%] ${isSender ? 'order-2' : 'order-1'}`}>
                               <div className={`rounded-2xl px-4 py-2 ${
-                                isSender 
-                                  ? 'bg-indigo-600 text-white' 
-                                  : 'bg-white text-gray-900'
+                                isBroadcast
+                                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                  : isSender 
+                                    ? 'bg-indigo-600 text-white' 
+                                    : 'bg-white text-gray-900'
                               }`}>
                                 <p className="text-sm break-words">{msg.message_text}</p>
                               </div>
@@ -384,6 +309,13 @@ export default function DirectMessages() {
           </div>
         </div>
       </div>
+
+      {/* Broadcast Dialog */}
+      <BroadcastMessageDialog
+        isOpen={showBroadcast}
+        onClose={() => setShowBroadcast(false)}
+        currentUser={user}
+      />
     </div>
   );
 }
