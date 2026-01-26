@@ -18,10 +18,14 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
 
   useEffect(() => {
     const fetchUsers = async () => {
+      if (!currentUser) return;
+      
       try {
         // Fetch all users except the current user
         const allUsers = await base44.entities.User.list('-created_date', 500);
+        console.log('All users fetched:', allUsers);
         const connectedUsers = allUsers.filter(u => u.id !== currentUser.id);
+        console.log('Connected users after filter:', connectedUsers);
 
         setUsers(connectedUsers);
       } catch (error) {
@@ -30,16 +34,14 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
       }
     };
 
-    if (currentUser) {
-      fetchUsers();
-    }
+    fetchUsers();
 
     // Subscribe to real-time message updates to refresh user list
     const messageUnsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         const msg = event.data;
         // If message involves current user, refresh the user list
-        if (msg.sender_id === currentUser.id || msg.receiver_id === currentUser.id) {
+        if (currentUser && (msg.sender_id === currentUser.id || msg.receiver_id === currentUser.id)) {
           fetchUsers();
         }
       }
