@@ -34,6 +34,7 @@ const employeeNavItems = [
   { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
   { name: 'Attendance History', page: 'AttendanceHistory', icon: Clock },
   { name: 'Leave Requests', page: 'LeaveRequests', icon: FileText },
+  { name: 'Groups', page: 'Groups', icon: Users },
   { name: 'Direct Messages', page: 'DirectMessages', icon: Users },
   { name: 'My Profile', page: 'MyProfile', icon: UserCircle },
 ];
@@ -45,6 +46,7 @@ const adminNavItems = [
   { name: 'My Dashboard', page: 'Dashboard', icon: Users },
   { name: 'Attendance History', page: 'AttendanceHistory', icon: Clock },
   { name: 'Leave Requests', page: 'LeaveRequests', icon: FileText },
+  { name: 'Groups', page: 'Groups', icon: Users },
   { name: 'Direct Messages', page: 'DirectMessages', icon: Users },
   { name: 'My Profile', page: 'MyProfile', icon: UserCircle },
 ];
