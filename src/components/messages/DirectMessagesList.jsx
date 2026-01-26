@@ -18,13 +18,10 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // Fetch all users with complete profiles
+        // Fetch all users (no profile completion required)
         const allUsers = await base44.entities.User.list();
         const completeUsers = allUsers.filter(u => 
-          u.id !== currentUser.id && 
-          u.employee_id && 
-          u.department && 
-          u.mobile_number
+          u.id !== currentUser.id
         );
 
         // Auto-connect logic:
