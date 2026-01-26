@@ -1,9 +1,33 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, differenceInMinutes } from "date-fns";
 import { motion } from "framer-motion";
 import { Clock, Calendar } from "lucide-react";
+
+// Calculate total hours worked in a day
+const calculateTotalHours = (clockIn, clockOut) => {
+  if (!clockIn || !clockOut) return null;
+  
+  try {
+    const [inHours, inMinutes] = clockIn.split(':').map(Number);
+    const [outHours, outMinutes] = clockOut.split(':').map(Number);
+    
+    const inDate = new Date();
+    inDate.setHours(inHours, inMinutes, 0);
+    
+    const outDate = new Date();
+    outDate.setHours(outHours, outMinutes, 0);
+    
+    const totalMinutes = differenceInMinutes(outDate, inDate);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    return { hours, minutes, totalMinutes };
+  } catch (error) {
+    return null;
+  }
+};
 
 const statusStyles = {
   present: "bg-emerald-100 text-emerald-700 border-emerald-200",
@@ -29,55 +53,76 @@ export default function AttendanceHistory({ attendance, limit }) {
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <Calendar className="w-5 h-5 text-indigo-600" />
-          Recent Attendance
+          Recent Activity
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {displayData.length === 0 ? (
             <p className="text-gray-400 text-center py-8">No attendance records yet</p>
           ) : (
-            displayData.map((record, index) => (
-              <motion.div
-                key={record.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex flex-col items-center justify-center">
-                    <span className="text-xs text-gray-400 uppercase">
-                      {format(parseISO(record.date), "MMM")}
-                    </span>
-                    <span className="text-lg font-bold text-gray-900">
-                      {format(parseISO(record.date), "d")}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {format(parseISO(record.date), "EEEE")}
-                    </p>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      {record.clock_in && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {record.clock_in} - {record.clock_out || "..."}
+            displayData.map((record, index) => {
+              const timeWorked = calculateTotalHours(record.clock_in, record.clock_out);
+              
+              return (
+                <motion.div
+                  key={record.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-indigo-600 text-white flex flex-col items-center justify-center">
+                        <span className="text-xs uppercase font-semibold">
+                          {format(parseISO(record.date), "MMM")}
                         </span>
-                      )}
-                      {record.work_hours && (
-                        <span className="text-indigo-600 font-medium">
-                          {record.work_hours.toFixed(1)}h
+                        <span className="text-lg font-bold">
+                          {format(parseISO(record.date), "d")}
                         </span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 text-lg">
+                          {format(parseISO(record.date), "EEEE")}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {record.clock_in ? '1 session today' : 'No session'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {timeWorked ? (
+                        <>
+                          <p className="text-xl font-bold text-gray-900">
+                            {timeWorked.hours}h {timeWorked.minutes}m
+                          </p>
+                          <p className="text-xs text-gray-500 uppercase">Total Worked</p>
+                        </>
+                      ) : (
+                        <Badge className={`${statusStyles[record.status]} border capitalize`}>
+                          {statusLabels[record.status] || record.status}
+                        </Badge>
                       )}
                     </div>
                   </div>
-                </div>
-                <Badge className={`${statusStyles[record.status]} border capitalize`}>
-                  {statusLabels[record.status] || record.status}
-                </Badge>
-              </motion.div>
-            ))
+
+                  {record.clock_in && (
+                    <div className="flex items-center gap-2 text-sm bg-white rounded-lg p-3 border border-gray-200">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="font-medium text-gray-700">{record.clock_in}</span>
+                      <span className="text-gray-400">→</span>
+                      <span className="font-medium text-gray-700">{record.clock_out || "Working..."}</span>
+                      {timeWorked && (
+                        <span className="ml-auto text-xs text-indigo-600 font-medium">
+                          {timeWorked.totalMinutes} minutes
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })
           )}
         </div>
       </CardContent>
