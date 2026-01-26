@@ -81,7 +81,7 @@ export default function Layout({ children, currentPageName }) {
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin Panel</p>
           </div>
           <div className="space-y-1">
-            {adminNavItems.slice(0, 3).map((item) => {
+            {adminNavItems.slice(0, 4).map((item) => {
               const Icon = item.icon;
               const isActive = currentPageName === item.page;
               
