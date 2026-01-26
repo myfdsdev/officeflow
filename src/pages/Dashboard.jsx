@@ -21,6 +21,58 @@ import { motion } from "framer-motion";
 import LeaveRequestForm from '../components/leave/LeaveRequestForm';
 import LeaveRequestList from '../components/leave/LeaveRequestList';
 
+// Live Timer Component
+function LiveTimer({ clockIn, clockOut }) {
+  const [elapsed, setElapsed] = useState('00:00:00');
+
+  useEffect(() => {
+    if (!clockIn || clockOut) {
+      // If not clocked in or already clocked out, show static time
+      if (clockOut && clockIn) {
+        const [inH, inM] = clockIn.split(':').map(Number);
+        const [outH, outM] = clockOut.split(':').map(Number);
+        const totalMinutes = (outH * 60 + outM) - (inH * 60 + inM);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        const seconds = 0;
+        setElapsed(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+      } else {
+        setElapsed('00:00:00');
+      }
+      return;
+    }
+
+    // Calculate and update elapsed time every second
+    const updateTimer = () => {
+      const now = new Date();
+      const [clockInHours, clockInMinutes] = clockIn.split(':').map(Number);
+      
+      const clockInDate = new Date();
+      clockInDate.setHours(clockInHours, clockInMinutes, 0, 0);
+      
+      const diffMs = now - clockInDate;
+      const diffSeconds = Math.floor(diffMs / 1000);
+      
+      const hours = Math.floor(diffSeconds / 3600);
+      const minutes = Math.floor((diffSeconds % 3600) / 60);
+      const seconds = diffSeconds % 60;
+      
+      setElapsed(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [clockIn, clockOut]);
+
+  return (
+    <div className="text-5xl font-bold text-gray-900 font-mono">
+      {elapsed}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [showLeaveForm, setShowLeaveForm] = useState(false);
@@ -249,64 +301,117 @@ export default function Dashboard() {
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <Card className="p-8 border-0 shadow-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-white">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold mb-2">Today's Attendance</h2>
-              {todayAttendance ? (
-                <div className="flex items-center justify-center gap-4 flex-wrap">
-                  {todayAttendance.clock_in && (
-                    <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2">
-                      <LogIn className="w-4 h-4" />
-                      <span>In: {todayAttendance.clock_in}</span>
+          <Card className="p-8 md:p-12 border-0 shadow-lg bg-white">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              {/* Left Side - Check In/Out Button */}
+              <div className="flex flex-col items-center">
+                <p className="text-gray-400 text-sm uppercase tracking-wide mb-6">
+                  {!todayAttendance?.clock_in ? 'Ready to Start?' : todayAttendance?.clock_out ? 'Great Job Today!' : 'Currently Working'}
+                </p>
+                
+                {!todayAttendance?.clock_in && (
+                  <button
+                    onClick={() => clockInMutation.mutate()}
+                    disabled={clockInMutation.isPending}
+                    className="relative w-64 h-64 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 shadow-2xl hover:shadow-indigo-300 hover:scale-105 transition-all duration-300 group disabled:opacity-50"
+                  >
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <LogIn className="w-12 h-12 text-white mb-3 group-hover:scale-110 transition-transform" />
+                      <span className="text-white font-bold text-2xl">Check In</span>
                     </div>
-                  )}
-                  {todayAttendance.clock_out && (
-                    <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2">
-                      <LogOut className="w-4 h-4" />
-                      <span>Out: {todayAttendance.clock_out}</span>
-                    </div>
-                  )}
-                  {todayAttendance.work_hours && (
-                    <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2">
-                      <Clock className="w-4 h-4" />
-                      <span>{todayAttendance.work_hours.toFixed(1)} hrs</span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-indigo-200">No attendance marked yet</p>
-              )}
-            </div>
+                  </button>
+                )}
 
-            <div className="flex gap-4 justify-center">
-              {!todayAttendance?.clock_in && (
-                <Button
-                  onClick={() => clockInMutation.mutate()}
-                  disabled={clockInMutation.isPending}
-                  size="lg"
-                  className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold text-lg px-12 py-8 rounded-2xl shadow-xl h-auto"
-                >
-                  <LogIn className="w-6 h-6 mr-3" />
-                  Check In
-                </Button>
-              )}
-              {todayAttendance?.clock_in && !todayAttendance?.clock_out && (
-                <Button
-                  onClick={() => setShowCheckoutConfirm(true)}
-                  disabled={clockOutMutation.isPending}
-                  size="lg"
-                  className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold text-lg px-12 py-8 rounded-2xl shadow-xl h-auto"
-                >
-                  <LogOut className="w-6 h-6 mr-3" />
-                  Check Out
-                </Button>
-              )}
-              {todayAttendance?.clock_out && (
-                <div className="flex items-center gap-3 bg-white/20 rounded-2xl px-8 py-6">
-                  <CheckCircle2 className="w-6 h-6" />
-                  <span className="font-semibold text-lg">Attendance Completed</span>
+                {todayAttendance?.clock_in && !todayAttendance?.clock_out && (
+                  <button
+                    onClick={() => setShowCheckoutConfirm(true)}
+                    disabled={clockOutMutation.isPending}
+                    className="relative w-64 h-64 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 shadow-2xl hover:shadow-rose-300 hover:scale-105 transition-all duration-300 group disabled:opacity-50"
+                  >
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <LogOut className="w-12 h-12 text-white mb-3 group-hover:scale-110 transition-transform" />
+                      <span className="text-white font-bold text-2xl">Check Out</span>
+                    </div>
+                  </button>
+                )}
+
+                {todayAttendance?.clock_out && (
+                  <div className="relative w-64 h-64 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-2xl">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <CheckCircle2 className="w-12 h-12 text-white mb-3" />
+                      <span className="text-white font-bold text-2xl">Completed</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-8 text-center">
+                  <p className="text-gray-400 text-sm mb-2">Time Elapsed</p>
+                  <LiveTimer 
+                    clockIn={todayAttendance?.clock_in}
+                    clockOut={todayAttendance?.clock_out}
+                  />
                 </div>
-              )}
+              </div>
+
+              {/* Right Side - Stats */}
+              <div className="space-y-6">
+                <Card className="p-6 border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-indigo-50">
+                      <Clock className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <span className="text-gray-600 font-medium">Today's Hours</span>
+                  </div>
+                  <p className="text-4xl font-bold text-gray-900">
+                    {todayAttendance?.work_hours 
+                      ? `${Math.floor(todayAttendance.work_hours)}h ${Math.round((todayAttendance.work_hours % 1) * 60)}m`
+                      : '0h 0m'
+                    }
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    {todayAttendance?.clock_in || '00:00:00'}
+                  </p>
+                </Card>
+
+                <Card className="p-6 border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-purple-50">
+                      <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <span className="text-gray-600 font-medium">Status</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      todayAttendance?.clock_in && !todayAttendance?.clock_out 
+                        ? 'bg-green-500' 
+                        : 'bg-gray-300'
+                    }`} />
+                    <span className="text-2xl font-bold text-gray-900">
+                      {todayAttendance?.clock_in && !todayAttendance?.clock_out 
+                        ? 'Online' 
+                        : 'Offline'
+                      }
+                    </span>
+                  </div>
+                </Card>
+
+                {todayAttendance?.clock_in && (
+                  <Card className="p-6 border border-gray-200 shadow-sm bg-indigo-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <LogIn className="w-4 h-4" />
+                        <span>Check In: {todayAttendance.clock_in}</span>
+                      </div>
+                      {todayAttendance.clock_out && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <LogOut className="w-4 h-4" />
+                          <span>Check Out: {todayAttendance.clock_out}</span>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
+              </div>
             </div>
           </Card>
         </motion.div>
