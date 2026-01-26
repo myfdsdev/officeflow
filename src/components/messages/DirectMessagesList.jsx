@@ -18,39 +18,9 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // Fetch all users (no profile completion required)
+        // Fetch all users except the current user
         const allUsers = await base44.entities.User.list();
-        const completeUsers = allUsers.filter(u => 
-          u.id !== currentUser.id
-        );
-
-        // Auto-connect logic:
-        // - Team Members see all Admins
-        // - Admins see all Team Members
-        let connectedUsers = [];
-        
-        if (currentUser.role === 'admin') {
-          // Admin sees all team members
-          connectedUsers = completeUsers;
-        } else {
-          // Team member sees all admins + other team members they've messaged
-          const allMessages = await base44.entities.Message.list('-created_date', 1000);
-          const userMessages = allMessages.filter(m => 
-            m.sender_id === currentUser.id || m.receiver_id === currentUser.id
-          );
-
-          // Get users from existing conversations
-          const conversationUserIds = new Set();
-          userMessages.forEach(m => {
-            if (m.sender_id !== currentUser.id) conversationUserIds.add(m.sender_id);
-            if (m.receiver_id !== currentUser.id) conversationUserIds.add(m.receiver_id);
-          });
-
-          // Show all admins + users from conversations
-          connectedUsers = completeUsers.filter(u => 
-            u.role === 'admin' || conversationUserIds.has(u.id)
-          );
-        }
+        const connectedUsers = allUsers.filter(u => u.id !== currentUser.id);
 
         setUsers(connectedUsers);
       } catch (error) {
@@ -260,7 +230,7 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
                   {currentUser.role === 'admin' ? (
                     <p className="text-xs mt-2">Invite team members to start messaging</p>
                   ) : (
-                    <p className="text-xs mt-2">Waiting for team members to complete their profiles</p>
+                    <p className="text-xs mt-2">Waiting for team members to join</p>
                   )}
                 </div>
               )}
