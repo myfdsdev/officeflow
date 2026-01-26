@@ -18,7 +18,30 @@ export default function DirectMessages() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(setUser);
+    const initUser = async () => {
+      const userData = await base44.auth.me();
+      setUser(userData);
+      
+      // Mark all message notifications as read when Direct Messages page is opened
+      if (userData) {
+        try {
+          const notifications = await base44.entities.Notification.filter({
+            user_email: userData.email,
+            is_read: false,
+            type: 'new_message'
+          });
+          
+          // Mark all message notifications as read
+          for (const notif of notifications) {
+            await base44.entities.Notification.update(notif.id, { is_read: true });
+          }
+        } catch (error) {
+          console.error('Failed to mark notifications as read:', error);
+        }
+      }
+    };
+    
+    initUser();
   }, []);
 
   // Fetch messages for the selected conversation
@@ -56,12 +79,53 @@ export default function DirectMessages() {
         if (msg.sender_id === user.id || msg.receiver_id === user.id) {
           // Invalidate all message queries to refresh all conversations
           queryClient.invalidateQueries({ queryKey: ['messages'] });
+          
+          // Mark message as read if it's for the current user
+          if (msg.receiver_id === user.id && !msg.is_read) {
+            base44.entities.Message.update(msg.id, { is_read: true }).catch(console.error);
+          }
         }
       }
     });
 
     return unsubscribe;
   }, [user, queryClient]);
+
+  // Auto-select user if only one conversation exists
+  useEffect(() => {
+    const autoSelectUser = async () => {
+      if (!user || selectedUser) return;
+
+      try {
+        // Fetch all messages involving current user
+        const allMessages = await base44.entities.Message.list('-created_date', 1000);
+        const userMessages = allMessages.filter(m => 
+          m.sender_id === user.id || m.receiver_id === user.id
+        );
+
+        // Extract unique user IDs
+        const userIdsSet = new Set();
+        userMessages.forEach(m => {
+          if (m.sender_id !== user.id) userIdsSet.add(m.sender_id);
+          if (m.receiver_id !== user.id) userIdsSet.add(m.receiver_id);
+        });
+
+        // If only one conversation exists, auto-open it
+        if (userIdsSet.size === 1) {
+          const userId = Array.from(userIdsSet)[0];
+          const allUsers = await base44.entities.User.list();
+          const targetUser = allUsers.find(u => u.id === userId);
+          if (targetUser) {
+            setSelectedUser(targetUser);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to auto-select user:', error);
+      }
+    };
+
+    autoSelectUser();
+  }, [user, selectedUser]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -78,6 +142,7 @@ export default function DirectMessages() {
         receiver_email: selectedUser.email,
         receiver_name: selectedUser.full_name,
         message_text: text,
+        is_read: false,
       });
       return newMessage;
     },
@@ -87,6 +152,31 @@ export default function DirectMessages() {
       setMessageText('');
     },
   });
+
+  // Mark messages as read when conversation is opened
+  useEffect(() => {
+    const markMessagesAsRead = async () => {
+      if (!user || !selectedUser) return;
+
+      try {
+        const allMessages = await base44.entities.Message.list();
+        const unreadMessages = allMessages.filter(m => 
+          m.receiver_id === user.id && 
+          m.sender_id === selectedUser.id && 
+          !m.is_read
+        );
+
+        // Mark all unread messages from this user as read
+        for (const msg of unreadMessages) {
+          await base44.entities.Message.update(msg.id, { is_read: true });
+        }
+      } catch (error) {
+        console.error('Failed to mark messages as read:', error);
+      }
+    };
+
+    markMessagesAsRead();
+  }, [user, selectedUser]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
