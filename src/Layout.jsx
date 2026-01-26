@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import NotificationBell from './components/notifications/NotificationBell';
 import { useUserActivity } from './components/hooks/useUserActivity';
+import { useAutoCheckIn } from './components/hooks/useAutoCheckIn';
 import OnlineStatusIndicator from './components/admin/OnlineStatusIndicator';
 
 const employeeNavItems = [
@@ -58,6 +59,9 @@ export default function Layout({ children, currentPageName }) {
 
   // Track user activity and update online status
   useUserActivity(user);
+  
+  // Auto check-in on first load of the day
+  useAutoCheckIn(user);
 
   const getInitials = (name) => {
     if (!name) return "?";
