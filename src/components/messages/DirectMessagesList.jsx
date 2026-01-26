@@ -20,12 +20,13 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
     const fetchUsers = async () => {
       try {
         // Fetch all users except the current user
-        const allUsers = await base44.entities.User.list();
+        const allUsers = await base44.entities.User.list('-created_date', 500);
         const connectedUsers = allUsers.filter(u => u.id !== currentUser.id);
 
         setUsers(connectedUsers);
       } catch (error) {
         console.error('Failed to fetch users:', error);
+        setUsers([]); // Set empty array on error
       }
     };
 
