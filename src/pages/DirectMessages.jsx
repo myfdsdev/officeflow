@@ -25,7 +25,7 @@ export default function DirectMessages() {
       const userData = await base44.auth.me();
       setUser(userData);
       
-      // Mark message notifications as read when page opens
+      // Mark ALL message notifications as read when DirectMessages page opens
       if (userData) {
         try {
           const notifications = await base44.entities.Notification.filter({
@@ -34,9 +34,14 @@ export default function DirectMessages() {
             type: 'new_message'
           });
           
-          for (const notif of notifications) {
-            await base44.entities.Notification.update(notif.id, { is_read: true });
-          }
+          // Mark all message notifications as read immediately
+          const updatePromises = notifications.map(notif => 
+            base44.entities.Notification.update(notif.id, { is_read: true })
+          );
+          await Promise.all(updatePromises);
+          
+          // Invalidate notifications query to update bell icon
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
         } catch (error) {
           console.error('Failed to mark notifications as read:', error);
         }
@@ -44,7 +49,7 @@ export default function DirectMessages() {
     };
     
     initUser();
-  }, []);
+  }, [queryClient]);
 
   // Fetch messages for the selected conversation
   const { data: messages = [], isLoading: loadingMessages, error: messagesError } = useQuery({
@@ -116,13 +121,15 @@ export default function DirectMessages() {
         muted_by: [],
       });
 
-      // Create notification for receiver if not muted
+      // Only create notification for receiver if not muted
+      // Notification will be automatically marked as read if they're on DirectMessages page
       await base44.entities.Notification.create({
         user_email: selectedUser.email,
         title: 'New Message',
         message: `${user.full_name}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`,
         type: 'new_message',
         is_read: false,
+        related_id: newMessage.id,
       });
 
       return newMessage;
@@ -214,16 +221,34 @@ export default function DirectMessages() {
           !m.is_read
         );
 
-        for (const msg of unreadMessages) {
-          await base44.entities.Message.update(msg.id, { is_read: true });
-        }
+        // Mark messages as read
+        const updatePromises = unreadMessages.map(msg =>
+          base44.entities.Message.update(msg.id, { is_read: true })
+        );
+        await Promise.all(updatePromises);
+
+        // Also mark related message notifications as read
+        const messageNotifications = await base44.entities.Notification.filter({
+          user_email: user.email,
+          type: 'new_message',
+          is_read: false,
+        });
+
+        const notifUpdatePromises = messageNotifications
+          .filter(notif => notif.message.includes(selectedUser.full_name))
+          .map(notif => base44.entities.Notification.update(notif.id, { is_read: true }));
+        
+        await Promise.all(notifUpdatePromises);
+        
+        // Update notification count
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
       } catch (error) {
         console.error('Failed to mark messages as read:', error);
       }
     };
 
     markAsRead();
-  }, [user, selectedUser, messages]);
+  }, [user, selectedUser, messages, queryClient]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
