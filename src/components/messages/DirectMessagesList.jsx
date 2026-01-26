@@ -18,31 +18,44 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // Fetch all messages involving current user
-        const allMessages = await base44.entities.Message.list('-created_date', 1000);
-        const userMessages = allMessages.filter(m => 
-          m.sender_id === currentUser.id || m.receiver_id === currentUser.id
+        // Fetch all users with complete profiles
+        const allUsers = await base44.entities.User.list();
+        const completeUsers = allUsers.filter(u => 
+          u.id !== currentUser.id && 
+          u.employee_id && 
+          u.department && 
+          u.mobile_number
         );
 
-        // Extract unique user IDs from conversations
-        const userIdsSet = new Set();
-        userMessages.forEach(m => {
-          if (m.sender_id !== currentUser.id) {
-            userIdsSet.add(m.sender_id);
-          }
-          if (m.receiver_id !== currentUser.id) {
-            userIdsSet.add(m.receiver_id);
-          }
-        });
-
-        // Fetch user details for conversation participants
-        if (userIdsSet.size > 0) {
-          const allUsers = await base44.entities.User.list();
-          const conversationUsers = allUsers.filter(u => userIdsSet.has(u.id));
-          setUsers(conversationUsers);
+        // Auto-connect logic:
+        // - Team Members see all Admins
+        // - Admins see all Team Members
+        let connectedUsers = [];
+        
+        if (currentUser.role === 'admin') {
+          // Admin sees all team members
+          connectedUsers = completeUsers;
         } else {
-          setUsers([]);
+          // Team member sees all admins + other team members they've messaged
+          const allMessages = await base44.entities.Message.list('-created_date', 1000);
+          const userMessages = allMessages.filter(m => 
+            m.sender_id === currentUser.id || m.receiver_id === currentUser.id
+          );
+
+          // Get users from existing conversations
+          const conversationUserIds = new Set();
+          userMessages.forEach(m => {
+            if (m.sender_id !== currentUser.id) conversationUserIds.add(m.sender_id);
+            if (m.receiver_id !== currentUser.id) conversationUserIds.add(m.receiver_id);
+          });
+
+          // Show all admins + users from conversations
+          connectedUsers = completeUsers.filter(u => 
+            u.role === 'admin' || conversationUserIds.has(u.id)
+          );
         }
+
+        setUsers(connectedUsers);
       } catch (error) {
         console.error('Failed to fetch users:', error);
       }
@@ -65,10 +78,8 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
 
     // Subscribe to real-time user updates to update user info
     const userUnsubscribe = base44.entities.User.subscribe((event) => {
-      if (event.type === 'update') {
-        setUsers(prev => 
-          prev.map(u => u.id === event.id ? event.data : u)
-        );
+      if (event.type === 'update' || event.type === 'create') {
+        fetchUsers(); // Refresh to include new users
       }
     });
 
@@ -248,8 +259,12 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
               {users.length === 0 && currentUser && (
                 <div className="text-center text-gray-400 text-sm py-8">
                   <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="font-medium text-gray-500">No conversations yet</p>
-                  <p className="text-xs mt-2">Start a conversation by sending a message to team members</p>
+                  <p className="font-medium text-gray-500">No team members yet</p>
+                  {currentUser.role === 'admin' ? (
+                    <p className="text-xs mt-2">Invite team members to start messaging</p>
+                  ) : (
+                    <p className="text-xs mt-2">Waiting for team members to complete their profiles</p>
+                  )}
                 </div>
               )}
             </CardContent>
