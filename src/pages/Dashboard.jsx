@@ -5,6 +5,16 @@ import { format } from 'date-fns';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Calendar, Clock, CheckCircle2, LogIn, LogOut, FileText, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -14,6 +24,7 @@ import LeaveRequestList from '../components/leave/LeaveRequestList';
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [showLeaveForm, setShowLeaveForm] = useState(false);
+  const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
   const queryClient = useQueryClient();
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -281,7 +292,7 @@ export default function Dashboard() {
               )}
               {todayAttendance?.clock_in && !todayAttendance?.clock_out && (
                 <Button
-                  onClick={() => clockOutMutation.mutate()}
+                  onClick={() => setShowCheckoutConfirm(true)}
                   disabled={clockOutMutation.isPending}
                   size="lg"
                   className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold text-lg px-12 py-8 rounded-2xl shadow-xl h-auto"
@@ -390,6 +401,30 @@ export default function Dashboard() {
           onSubmit={(data) => leaveRequestMutation.mutate(data)}
           isLoading={leaveRequestMutation.isPending}
         />
+
+        {/* Checkout Confirmation Dialog */}
+        <AlertDialog open={showCheckoutConfirm} onOpenChange={setShowCheckoutConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Check Out की पुष्टि करें</AlertDialogTitle>
+              <AlertDialogDescription>
+                क्या आप वाकई चेक आउट करना चाहते हैं? यह आपके आज के काम का समय दर्ज कर देगा।
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>रद्द करें</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setShowCheckoutConfirm(false);
+                  clockOutMutation.mutate();
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                हाँ, Check Out करें
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
