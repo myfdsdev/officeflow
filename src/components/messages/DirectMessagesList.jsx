@@ -18,15 +18,31 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const allUsers = await base44.entities.User.list();
-        // Filter out current user and users without complete profile
-        const otherUsers = allUsers.filter(u => 
-          u.email !== currentUser?.email && 
-          u.employee_id && // Has completed profile
-          u.department && // Has selected department
-          u.mobile_number // Has added mobile number
+        // Fetch all messages involving current user
+        const allMessages = await base44.entities.Message.list('-created_date', 1000);
+        const userMessages = allMessages.filter(m => 
+          m.sender_id === currentUser.id || m.receiver_id === currentUser.id
         );
-        setUsers(otherUsers);
+
+        // Extract unique user IDs from conversations
+        const userIdsSet = new Set();
+        userMessages.forEach(m => {
+          if (m.sender_id !== currentUser.id) {
+            userIdsSet.add(m.sender_id);
+          }
+          if (m.receiver_id !== currentUser.id) {
+            userIdsSet.add(m.receiver_id);
+          }
+        });
+
+        // Fetch user details for conversation participants
+        if (userIdsSet.size > 0) {
+          const allUsers = await base44.entities.User.list();
+          const conversationUsers = allUsers.filter(u => userIdsSet.has(u.id));
+          setUsers(conversationUsers);
+        } else {
+          setUsers([]);
+        }
       } catch (error) {
         console.error('Failed to fetch users:', error);
       }
@@ -36,21 +52,30 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
       fetchUsers();
     }
 
-    // Subscribe to real-time user updates
-    const unsubscribe = base44.entities.User.subscribe((event) => {
-      if (event.type === 'update') {
-        setUsers(prev => 
-          prev.map(u => u.id === event.id ? event.data : u)
-        );
-      } else if (event.type === 'create') {
-        // Add newly invited users to the list
-        if (event.data.email !== currentUser?.email) {
-          setUsers(prev => [...prev, event.data]);
+    // Subscribe to real-time message updates to refresh user list
+    const messageUnsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.type === 'create') {
+        const msg = event.data;
+        // If message involves current user, refresh the user list
+        if (msg.sender_id === currentUser.id || msg.receiver_id === currentUser.id) {
+          fetchUsers();
         }
       }
     });
 
-    return unsubscribe;
+    // Subscribe to real-time user updates to update user info
+    const userUnsubscribe = base44.entities.User.subscribe((event) => {
+      if (event.type === 'update') {
+        setUsers(prev => 
+          prev.map(u => u.id === event.id ? event.data : u)
+        );
+      }
+    });
+
+    return () => {
+      messageUnsubscribe();
+      userUnsubscribe();
+    };
   }, [currentUser]);
 
   const getInitials = (name) => {
@@ -222,10 +247,9 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
 
               {users.length === 0 && currentUser && (
                 <div className="text-center text-gray-400 text-sm py-8">
-                  <p>No other users available</p>
-                  {currentUser.role !== 'admin' && (
-                    <p className="text-xs mt-2">Waiting for team members to join</p>
-                  )}
+                  <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="font-medium text-gray-500">No conversations yet</p>
+                  <p className="text-xs mt-2">Start a conversation by sending a message to team members</p>
                 </div>
               )}
             </CardContent>
