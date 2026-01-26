@@ -130,11 +130,10 @@ export default function DirectMessages() {
   // Mark messages as read when conversation opened
   useEffect(() => {
     const markAsRead = async () => {
-      if (!user || !selectedUser) return;
+      if (!user || !selectedUser || !messages || messages.length === 0) return;
 
       try {
-        const allMessages = await base44.entities.Message.list();
-        const unreadMessages = allMessages.filter(m => 
+        const unreadMessages = messages.filter(m => 
           m.receiver_id === user.id && 
           m.sender_id === selectedUser.id && 
           !m.is_read
@@ -149,7 +148,7 @@ export default function DirectMessages() {
     };
 
     markAsRead();
-  }, [user, selectedUser]);
+  }, [user, selectedUser, messages]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
