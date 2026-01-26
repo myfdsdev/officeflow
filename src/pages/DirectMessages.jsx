@@ -6,9 +6,11 @@ import BroadcastMessageDialog from '../components/messages/BroadcastMessageDialo
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send, Megaphone } from "lucide-react";
+import { MessageCircle, Send, Megaphone, Pin } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import MessageContextMenu from '../components/messages/MessageContextMenu';
+import { toast } from 'react-hot-toast';
 
 export default function DirectMessages() {
   const [user, setUser] = useState(null);
@@ -108,9 +110,13 @@ export default function DirectMessages() {
         receiver_name: selectedUser.full_name,
         message_text: text,
         is_read: false,
+        is_edited: false,
+        is_pinned: false,
+        is_deleted: false,
+        muted_by: [],
       });
 
-      // Create notification for receiver
+      // Create notification for receiver if not muted
       await base44.entities.Notification.create({
         user_email: selectedUser.email,
         title: 'New Message',
@@ -126,6 +132,75 @@ export default function DirectMessages() {
       setMessageText('');
     },
   });
+
+  // Message Actions
+  const handleEditMessage = async (messageId, newText) => {
+    await base44.entities.Message.update(messageId, {
+      message_text: newText,
+      is_edited: true,
+    });
+    queryClient.invalidateQueries({ queryKey: ['messages'] });
+  };
+
+  const handleMarkUnread = async (messageId) => {
+    await base44.entities.Message.update(messageId, {
+      is_read: false,
+    });
+    queryClient.invalidateQueries({ queryKey: ['messages'] });
+  };
+
+  const handleSetReminder = async (messageId, reminderTime, messageText) => {
+    await base44.entities.MessageReminder.create({
+      user_id: user.id,
+      message_id: messageId,
+      message_text: messageText,
+      reminder_time: reminderTime.toISOString(),
+      is_triggered: false,
+    });
+  };
+
+  const handleToggleMute = async (messageId) => {
+    const msg = messages.find(m => m.id === messageId);
+    const mutedBy = msg.muted_by || [];
+    const isMuted = mutedBy.includes(user.id);
+    
+    await base44.entities.Message.update(messageId, {
+      muted_by: isMuted 
+        ? mutedBy.filter(id => id !== user.id)
+        : [...mutedBy, user.id]
+    });
+    queryClient.invalidateQueries({ queryKey: ['messages'] });
+  };
+
+  const handleCopyLink = async (messageId) => {
+    const link = `${window.location.origin}${window.location.pathname}?messageId=${messageId}`;
+    return link;
+  };
+
+  const handlePinMessage = async (messageId, pin) => {
+    await base44.entities.Message.update(messageId, {
+      is_pinned: pin,
+    });
+    queryClient.invalidateQueries({ queryKey: ['messages'] });
+  };
+
+  const handleDeleteMessage = async (messageId, deleteForEveryone) => {
+    if (deleteForEveryone) {
+      await base44.entities.Message.update(messageId, {
+        is_deleted: true,
+        deleted_for_everyone: true,
+        deleted_by: user.id,
+        message_text: 'This message was deleted',
+      });
+    } else {
+      await base44.entities.Message.update(messageId, {
+        is_deleted: true,
+        deleted_for_everyone: false,
+        deleted_by: user.id,
+      });
+    }
+    queryClient.invalidateQueries({ queryKey: ['messages'] });
+  };
 
   // Mark messages as read when conversation opened
   useEffect(() => {
@@ -242,26 +317,70 @@ export default function DirectMessages() {
                     </div>
                   ) : (
                     <>
+                      {/* Pinned Messages */}
+                      {messages.filter(m => m.is_pinned && !m.is_deleted).length > 0 && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Pin className="w-4 h-4 text-amber-600" />
+                            <span className="text-sm font-semibold text-amber-900">Pinned Messages</span>
+                          </div>
+                          <div className="space-y-2">
+                            {messages.filter(m => m.is_pinned && !m.is_deleted).map(msg => (
+                              <div key={msg.id} className="text-xs bg-white rounded p-2 text-gray-700">
+                                {msg.message_text.substring(0, 50)}...
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Regular Messages */}
                       {messages.map((msg) => {
                         const isSender = msg.sender_id === user.id;
                         const isBroadcast = msg.message_text.startsWith('📢 BROADCAST:');
-                        
+                        const isDeleted = msg.is_deleted && (msg.deleted_for_everyone || msg.deleted_by === user.id);
+
                         return (
                           <motion.div
                             key={msg.id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
+                            className={`flex ${isSender ? 'justify-end' : 'justify-start'} group`}
+                            id={`message-${msg.id}`}
                           >
                             <div className={`max-w-[70%] ${isSender ? 'order-2' : 'order-1'}`}>
-                              <div className={`rounded-2xl px-4 py-2 ${
-                                isBroadcast
-                                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                  : isSender 
-                                    ? 'bg-indigo-600 text-white' 
-                                    : 'bg-white text-gray-900'
-                              }`}>
-                                <p className="text-sm break-words">{msg.message_text}</p>
+                              <div className="flex items-start gap-2">
+                                <div className={`rounded-2xl px-4 py-2 ${
+                                  isDeleted
+                                    ? 'bg-gray-200 text-gray-500 italic'
+                                    : isBroadcast
+                                      ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                      : isSender 
+                                        ? 'bg-indigo-600 text-white' 
+                                        : 'bg-white text-gray-900'
+                                } ${msg.is_pinned ? 'ring-2 ring-amber-300' : ''}`}>
+                                  <div className="flex items-start gap-2">
+                                    <p className="text-sm break-words flex-1">
+                                      {msg.message_text}
+                                      {msg.is_edited && !isDeleted && (
+                                        <span className="text-xs opacity-70 ml-2">(edited)</span>
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+                                {!isDeleted && (
+                                  <MessageContextMenu
+                                    message={msg}
+                                    currentUser={user}
+                                    onEdit={handleEditMessage}
+                                    onMarkUnread={handleMarkUnread}
+                                    onReminder={handleSetReminder}
+                                    onToggleMute={handleToggleMute}
+                                    onCopyLink={handleCopyLink}
+                                    onPin={handlePinMessage}
+                                    onDelete={handleDeleteMessage}
+                                  />
+                                )}
                               </div>
                               <p className={`text-xs text-gray-400 mt-1 ${isSender ? 'text-right' : 'text-left'}`}>
                                 {format(new Date(msg.created_date), 'h:mm a')}
