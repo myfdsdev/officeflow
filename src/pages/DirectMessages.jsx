@@ -45,21 +45,26 @@ export default function DirectMessages() {
   }, []);
 
   // Fetch messages for the selected conversation
-  const { data: messages = [], isLoading: loadingMessages } = useQuery({
+  const { data: messages = [], isLoading: loadingMessages, error: messagesError } = useQuery({
     queryKey: ['messages', user?.id, selectedUser?.id],
     queryFn: async () => {
       if (!user || !selectedUser) return [];
       
-      const allMessages = await base44.entities.Message.list('-created_date', 1000);
-      
-      const conversationMessages = allMessages.filter(m => 
-        (m.sender_id === user.id && m.receiver_id === selectedUser.id) ||
-        (m.sender_id === selectedUser.id && m.receiver_id === user.id)
-      );
-      
-      return conversationMessages.sort((a, b) => 
-        new Date(a.created_date) - new Date(b.created_date)
-      );
+      try {
+        const allMessages = await base44.entities.Message.list('-created_date', 1000);
+        
+        const conversationMessages = allMessages.filter(m => 
+          (m.sender_id === user.id && m.receiver_id === selectedUser.id) ||
+          (m.sender_id === selectedUser.id && m.receiver_id === user.id)
+        );
+        
+        return conversationMessages.sort((a, b) => 
+          new Date(a.created_date) - new Date(b.created_date)
+        );
+      } catch (error) {
+        console.error('Failed to fetch messages:', error);
+        return [];
+      }
     },
     enabled: !!user && !!selectedUser,
     refetchInterval: 3000,
