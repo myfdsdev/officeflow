@@ -11,6 +11,7 @@ import MyProfile from './pages/MyProfile';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Settings from './pages/Settings';
 import Welcome from './pages/Welcome';
+import TeamManagement from './pages/TeamManagement';
 import __Layout from './Layout.jsx';
 
 
@@ -28,6 +29,7 @@ export const PAGES = {
     "PrivacyPolicy": PrivacyPolicy,
     "Settings": Settings,
     "Welcome": Welcome,
+    "TeamManagement": TeamManagement,
 }
 
 export const pagesConfig = {
