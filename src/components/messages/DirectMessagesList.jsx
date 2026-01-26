@@ -21,16 +21,18 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
       if (!currentUser) return;
       
       try {
-        // Fetch all users except the current user
-        const allUsers = await base44.entities.User.list('-created_date', 500);
-        console.log('All users fetched:', allUsers);
-        const connectedUsers = allUsers.filter(u => u.id !== currentUser.id);
-        console.log('Connected users after filter:', connectedUsers);
-
-        setUsers(connectedUsers);
+        // Fetch users via backend function (uses service role to bypass permissions)
+        const response = await base44.functions.invoke('getUsersForMessaging', {});
+        console.log('Users response:', response);
+        
+        if (response.data && response.data.users) {
+          setUsers(response.data.users);
+        } else {
+          setUsers([]);
+        }
       } catch (error) {
         console.error('Failed to fetch users:', error);
-        setUsers([]); // Set empty array on error
+        setUsers([]);
       }
     };
 
