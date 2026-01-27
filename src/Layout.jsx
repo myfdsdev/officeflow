@@ -103,6 +103,11 @@ export default function Layout({ children, currentPageName }) {
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
                   <span>{item.name}</span>
+                  {item.name === 'Direct Messages' && user && (
+                    <div className="ml-auto">
+                      <NotificationBell userEmail={user.email} notificationType="new_message" />
+                    </div>
+                  )}
                   {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
                 </Link>
               );
@@ -136,6 +141,11 @@ export default function Layout({ children, currentPageName }) {
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
                 <span>{item.name}</span>
+                {item.name === 'Direct Messages' && user && (
+                  <div className="ml-auto">
+                    <NotificationBell userEmail={user.email} notificationType="new_message" />
+                  </div>
+                )}
                 {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
               </Link>
             );

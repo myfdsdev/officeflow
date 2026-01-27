@@ -13,12 +13,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from 'date-fns';
 
-export default function NotificationBell({ userEmail }) {
+export default function NotificationBell({ userEmail, notificationType = null }) {
   const queryClient = useQueryClient();
 
   const { data: notifications = [] } = useQuery({
-    queryKey: ['notifications', userEmail],
-    queryFn: () => base44.entities.Notification.filter({ user_email: userEmail }, '-created_date', 50),
+    queryKey: ['notifications', userEmail, notificationType],
+    queryFn: async () => {
+      if (!userEmail) return [];
+      
+      if (notificationType) {
+        return await base44.entities.Notification.filter({ 
+          user_email: userEmail, 
+          type: notificationType 
+        }, '-created_date', 50);
+      }
+      
+      return await base44.entities.Notification.filter({ user_email: userEmail }, '-created_date', 50);
+    },
     enabled: !!userEmail,
     refetchInterval: 5000, // Refetch every 5 seconds
   });
