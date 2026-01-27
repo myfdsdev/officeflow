@@ -16,6 +16,7 @@ import { toZonedTime } from "date-fns-tz";
 import MessageContextMenu from '../components/messages/MessageContextMenu';
 import RichTextInput from '../components/messages/RichTextInput';
 import ConversationMenu from '../components/messages/ConversationMenu.jsx';
+import UserProfileDialog from '../components/messages/UserProfileDialog';
 import { toast } from 'react-hot-toast';
 
 export default function DirectMessages() {
@@ -29,6 +30,7 @@ export default function DirectMessages() {
     const saved = localStorage.getItem('starredConversations');
     return saved ? JSON.parse(saved) : [];
   });
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -392,7 +394,7 @@ export default function DirectMessages() {
                           setSelectedUser(null);
                           toast.success('Conversation hidden');
                         } else if (action === 'view-profile') {
-                          toast.success('Profile view coming soon');
+                          setProfileDialogOpen(true);
                         } else {
                           toast.success(`${action} feature coming soon`);
                         }
@@ -551,6 +553,13 @@ export default function DirectMessages() {
         isOpen={showBroadcast}
         onClose={() => setShowBroadcast(false)}
         currentUser={user}
+      />
+
+      {/* User Profile Dialog */}
+      <UserProfileDialog
+        open={profileDialogOpen}
+        onClose={() => setProfileDialogOpen(false)}
+        user={selectedUser}
       />
     </div>
   );
