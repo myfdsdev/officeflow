@@ -198,7 +198,7 @@ export default function GroupChatInterface({ group, currentUser }) {
                         isSender ? 'text-right' : 'text-left'
                       }`}
                     >
-                      {format(new Date(msg.created_date), 'h:mm a')}
+                      {format(new Date(msg.created_date), 'MMM d, h:mm a')}
                     </p>
                   </div>
                 </motion.div>
