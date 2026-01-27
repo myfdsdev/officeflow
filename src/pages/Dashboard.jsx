@@ -111,6 +111,23 @@ export default function Dashboard() {
         throw new Error('Attendance already marked for today');
       }
 
+      // Check for approved leave on this date
+      const approvedLeaves = await base44.entities.LeaveRequest.filter({
+        employee_email: user.email,
+        status: 'approved'
+      });
+
+      const hasLeaveToday = approvedLeaves.some(leave => {
+        const startDate = new Date(leave.start_date);
+        const endDate = new Date(leave.end_date);
+        const todayDate = new Date(today);
+        return todayDate >= startDate && todayDate <= endDate;
+      });
+
+      if (hasLeaveToday) {
+        throw new Error('You have an approved leave for today. Please contact admin to cancel the leave first.');
+      }
+
       const now = new Date();
       const clockInTime = format(now, 'HH:mm');
       const hours = now.getHours();
