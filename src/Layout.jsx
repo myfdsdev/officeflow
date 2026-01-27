@@ -91,25 +91,26 @@ export default function Layout({ children, currentPageName }) {
               const isActive = currentPageName === item.page;
               
               return (
-                <Link
-                  key={item.page}
-                  to={createPageUrl(item.page)}
-                  onClick={onClick}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? 'bg-indigo-50 text-indigo-600 font-medium'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-                  <span>{item.name}</span>
+                <div key={item.page} className="relative">
+                  <Link
+                    to={createPageUrl(item.page)}
+                    onClick={onClick}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                      isActive
+                        ? 'bg-indigo-50 text-indigo-600 font-medium'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
+                    <span className="flex-1">{item.name}</span>
+                    {isActive && <ChevronRight className="w-4 h-4" />}
+                  </Link>
                   {item.name === 'Direct Messages' && user && (
-                    <div className="ml-auto">
+                    <div className="absolute right-12 top-1/2 -translate-y-1/2 pointer-events-auto z-10">
                       <NotificationBell userEmail={user.email} notificationType="new_message" />
                     </div>
                   )}
-                  {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -129,25 +130,26 @@ export default function Layout({ children, currentPageName }) {
             const isActive = currentPageName === item.page;
             
             return (
-              <Link
-                key={item.page}
-                to={createPageUrl(item.page)}
-                onClick={onClick}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? 'bg-indigo-50 text-indigo-600 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-                <span>{item.name}</span>
+              <div key={item.page} className="relative">
+                <Link
+                  to={createPageUrl(item.page)}
+                  onClick={onClick}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-indigo-50 text-indigo-600 font-medium'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
+                  <span className="flex-1">{item.name}</span>
+                  {isActive && <ChevronRight className="w-4 h-4" />}
+                </Link>
                 {item.name === 'Direct Messages' && user && (
-                  <div className="ml-auto">
+                  <div className="absolute right-12 top-1/2 -translate-y-1/2 pointer-events-auto z-10">
                     <NotificationBell userEmail={user.email} notificationType="new_message" />
                   </div>
                 )}
-                {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
-              </Link>
+              </div>
             );
           })}
         </div>
