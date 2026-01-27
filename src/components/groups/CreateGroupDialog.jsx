@@ -29,6 +29,13 @@ export default function CreateGroupDialog({ open, onClose, currentUser }) {
     enabled: open,
   });
 
+  // Auto-select all users when dialog opens
+  useEffect(() => {
+    if (open && users.length > 0 && selectedMembers.length === 0) {
+      setSelectedMembers(users.map(u => u.id));
+    }
+  }, [open, users]);
+
   const createGroupMutation = useMutation({
     mutationFn: async () => {
       // Create group
