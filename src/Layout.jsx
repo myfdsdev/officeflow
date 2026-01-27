@@ -160,7 +160,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-100 p-4">
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-66 bg-white border-r border-gray-100 p-4">
         <div className="flex items-center gap-3 px-4 py-4 mb-6">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
             <Clock className="w-6 h-6 text-white" />
