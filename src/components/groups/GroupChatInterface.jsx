@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Send, Users, Circle } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { utcToZonedTime } from "date-fns-tz";
 
 export default function GroupChatInterface({ group, currentUser }) {
   const [messageText, setMessageText] = useState('');
@@ -199,7 +199,7 @@ export default function GroupChatInterface({ group, currentUser }) {
                         isSender ? 'text-right' : 'text-left'
                       }`}
                     >
-                      {formatInTimeZone(new Date(msg.created_date), 'Asia/Kolkata', 'MMM d, h:mm a')}
+                      {format(utcToZonedTime(new Date(msg.created_date + 'Z'), 'Asia/Kolkata'), 'MMM d, h:mm a')}
                     </p>
                   </div>
                 </motion.div>

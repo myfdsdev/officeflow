@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { MessageCircle, Send, Megaphone, Pin } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { utcToZonedTime } from "date-fns-tz";
 import MessageContextMenu from '../components/messages/MessageContextMenu';
 import { toast } from 'react-hot-toast';
 
@@ -431,7 +431,7 @@ export default function DirectMessages() {
                                 )}
                               </div>
                               <p className={`text-xs text-gray-400 mt-1 ${isSender ? 'text-right' : 'text-left'}`}>
-                                {formatInTimeZone(new Date(msg.created_date), 'Asia/Kolkata', 'MMM d, h:mm a')}
+                                {format(utcToZonedTime(new Date(msg.created_date + 'Z'), 'Asia/Kolkata'), 'MMM d, h:mm a')}
                               </p>
                             </div>
                           </motion.div>
