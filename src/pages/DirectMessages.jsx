@@ -15,7 +15,7 @@ import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import MessageContextMenu from '../components/messages/MessageContextMenu';
 import RichTextInput from '../components/messages/RichTextInput';
-import ConversationMenu from '../components/messages/ConversationMenu';
+import ConversationMenu from '../components/messages/ConversationMenu.jsx';
 import { toast } from 'react-hot-toast';
 
 export default function DirectMessages() {
