@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 
 import LeaveRequestForm from '../components/leave/LeaveRequestForm';
 import LeaveRequestList from '../components/leave/LeaveRequestList';
+import NotificationBell from '../components/notifications/NotificationBell';
 
 // Live Timer Component
 function LiveTimer({ clockIn, clockOut }) {
@@ -286,9 +287,12 @@ export default function Dashboard() {
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">{format(new Date(), "EEEE, MMMM d, yyyy")}</p>
               </div>
-              <div className="text-right hidden md:block">
-                <div className="text-3xl font-bold text-indigo-600">{attendancePercentage}%</div>
-                <p className="text-xs text-gray-500">This Month</p>
+              <div className="flex items-center gap-4">
+                <NotificationBell userEmail={user.email} />
+                <div className="text-right hidden md:block">
+                  <div className="text-3xl font-bold text-indigo-600">{attendancePercentage}%</div>
+                  <p className="text-xs text-gray-500">This Month</p>
+                </div>
               </div>
             </div>
           </Card>
