@@ -128,7 +128,8 @@ export default function GroupChatInterface({ group, currentUser }) {
   }).length;
 
   return (
-    <Card className="border-0 shadow-sm h-[600px] flex flex-col">
+    <>
+      <Card className="border-0 shadow-sm h-[600px] flex flex-col">
       {/* Chat Header */}
       <div className="p-4 border-b bg-white rounded-t-xl">
         <div className="flex items-center gap-3">
