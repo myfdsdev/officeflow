@@ -102,14 +102,14 @@ export default function Layout({ children, currentPageName }) {
                     }`}
                   >
                     <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-                    <span className="flex-1">{item.name}</span>
+                    <span className={item.name === 'Direct Messages' ? 'flex-1 mr-8' : 'flex-1'}>{item.name}</span>
+                    {item.name === 'Direct Messages' && user && (
+                      <div className="pointer-events-auto">
+                        <NotificationBell userEmail={user.email} notificationType="new_message" />
+                      </div>
+                    )}
                     {isActive && <ChevronRight className="w-4 h-4" />}
                   </Link>
-                  {item.name === 'Direct Messages' && user && (
-                    <div className="absolute right-12 top-1/2 -translate-y-1/2 pointer-events-auto z-10">
-                      <NotificationBell userEmail={user.email} notificationType="new_message" />
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -141,14 +141,14 @@ export default function Layout({ children, currentPageName }) {
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-                  <span className="flex-1">{item.name}</span>
+                  <span className={item.name === 'Direct Messages' ? 'flex-1 mr-8' : 'flex-1'}>{item.name}</span>
+                  {item.name === 'Direct Messages' && user && (
+                    <div className="pointer-events-auto">
+                      <NotificationBell userEmail={user.email} notificationType="new_message" />
+                    </div>
+                  )}
                   {isActive && <ChevronRight className="w-4 h-4" />}
                 </Link>
-                {item.name === 'Direct Messages' && user && (
-                  <div className="absolute right-12 top-1/2 -translate-y-1/2 pointer-events-auto z-10">
-                    <NotificationBell userEmail={user.email} notificationType="new_message" />
-                  </div>
-                )}
               </div>
             );
           })}
