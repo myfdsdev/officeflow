@@ -55,31 +55,66 @@ export default function CreateGroupDialog({ open, onClose, currentUser }) {
         user_email: currentUser.email,
         user_name: currentUser.full_name,
         role: 'admin',
+        added_by: currentUser.id,
+        added_by_name: currentUser.full_name,
       });
 
-      // Add selected members
-      const memberPromises = selectedMembers.map(userId => {
-        const user = users.find(u => u.id === userId);
-        return base44.entities.GroupMember.create({
-          group_id: group.id,
-          group_name: groupName,
-          user_id: user.id,
-          user_email: user.email,
-          user_name: user.full_name,
-          role: 'member',
+      // Add selected members and send notifications
+      const memberPromises = selectedMembers
+        .filter(userId => userId !== currentUser.id) // Don't add self again
+        .map(async (userId) => {
+          const user = users.find(u => u.id === userId);
+          
+          // Check if user already exists in group
+          const existingMembers = await base44.entities.GroupMember.filter({
+            group_id: group.id,
+            user_id: user.id,
+          });
+          
+          if (existingMembers.length > 0) {
+            throw new Error(`${user.full_name} is already a member of this group`);
+          }
+
+          // Create group member
+          await base44.entities.GroupMember.create({
+            group_id: group.id,
+            group_name: groupName,
+            user_id: user.id,
+            user_email: user.email,
+            user_name: user.full_name,
+            role: 'member',
+            added_by: currentUser.id,
+            added_by_name: currentUser.full_name,
+          });
+
+          // Send notification
+          await base44.entities.Notification.create({
+            user_email: user.email,
+            user_id: user.id,
+            title: 'Added to Group',
+            message: `You have been added to the group: ${groupName}`,
+            type: 'group_added',
+            is_read: false,
+            related_id: group.id,
+          });
         });
-      });
+      
       await Promise.all(memberPromises);
 
       return group;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['all-group-members'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       setGroupName('');
       setDescription('');
       setGroupType('attendance');
       setSelectedMembers([]);
       onClose();
+    },
+    onError: (error) => {
+      alert(`Failed to create group: ${error.message}`);
     },
   });
 

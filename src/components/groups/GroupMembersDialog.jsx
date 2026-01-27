@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users, Shield, User, Trash2, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from 'framer-motion';
+import AddMemberDialog from './AddMemberDialog';
 
 export default function GroupMembersDialog({ open, onClose, group, currentUser }) {
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: members = [] } = useQuery({
@@ -22,6 +24,10 @@ export default function GroupMembersDialog({ open, onClose, group, currentUser }
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['group-members'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['all-group-members'] });
+    },
+    onError: (error) => {
+      alert(`Failed to remove member: ${error.message}`);
     },
   });
 
@@ -40,13 +46,27 @@ export default function GroupMembersDialog({ open, onClose, group, currentUser }
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-600" />
-            {group.group_name} Members
-          </DialogTitle>
-          <p className="text-sm text-gray-500 mt-2">
-            {members.length} member(s) in this group
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" />
+                {group.group_name} Members
+              </DialogTitle>
+              <p className="text-sm text-gray-500 mt-2">
+                {members.length} member(s) in this group
+              </p>
+            </div>
+            {isGroupAdmin && (
+              <Button
+                onClick={() => setAddMemberOpen(true)}
+                size="sm"
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Members
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-2">
@@ -102,6 +122,14 @@ export default function GroupMembersDialog({ open, onClose, group, currentUser }
             ))}
           </AnimatePresence>
         </div>
+
+        <AddMemberDialog
+          open={addMemberOpen}
+          onClose={() => setAddMemberOpen(false)}
+          group={group}
+          currentUser={currentUser}
+          existingMemberIds={members.map(m => m.user_id)}
+        />
       </DialogContent>
     </Dialog>
   );
