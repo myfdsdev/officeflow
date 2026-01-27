@@ -11,6 +11,8 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import RichTextInput from '../messages/RichTextInput';
+import GroupConversationMenu from './GroupConversationMenu';
+import { toast } from 'react-hot-toast';
 
 export default function GroupChatInterface({ group, currentUser }) {
   const [messageText, setMessageText] = useState('');
@@ -143,6 +145,17 @@ export default function GroupChatInterface({ group, currentUser }) {
           <Badge className="bg-emerald-100 text-emerald-800">
             {group.group_type}
           </Badge>
+          <GroupConversationMenu 
+            group={group}
+            onAction={(action) => {
+              if (action === 'copy') {
+                navigator.clipboard.writeText(group.group_name);
+                toast.success('Group name copied');
+              } else {
+                toast.success(`${action} feature coming soon`);
+              }
+            }}
+          />
         </div>
       </div>
 

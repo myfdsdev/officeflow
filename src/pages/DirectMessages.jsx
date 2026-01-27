@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import MessageContextMenu from '../components/messages/MessageContextMenu';
 import RichTextInput from '../components/messages/RichTextInput';
+import ConversationMenu from '../components/messages/ConversationMenu';
 import { toast } from 'react-hot-toast';
 
 export default function DirectMessages() {
@@ -347,6 +348,17 @@ export default function DirectMessages() {
                         )}
                       </div>
                     </div>
+                    <ConversationMenu 
+                      selectedUser={selectedUser}
+                      onAction={(action) => {
+                        if (action === 'copy') {
+                          navigator.clipboard.writeText(selectedUser.email);
+                          toast.success('Email copied to clipboard');
+                        } else {
+                          toast.success(`${action} feature coming soon`);
+                        }
+                      }}
+                    />
                   </div>
                 </div>
 
