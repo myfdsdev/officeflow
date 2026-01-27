@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import MessageContextMenu from '../components/messages/MessageContextMenu';
+import RichTextInput from '../components/messages/RichTextInput';
 import { toast } from 'react-hot-toast';
 
 export default function DirectMessages() {
@@ -443,24 +444,15 @@ export default function DirectMessages() {
                 </div>
 
                 {/* Message Input */}
-                <form onSubmit={handleSendMessage} className="p-4 border-t bg-white rounded-b-xl">
-                  <div className="flex gap-2">
-                    <Input
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                      placeholder="Type a message..."
-                      className="flex-1"
-                      disabled={sendMessageMutation.isPending}
-                    />
-                    <Button
-                      type="submit"
-                      disabled={!messageText.trim() || sendMessageMutation.isPending}
-                      className="bg-indigo-600 hover:bg-indigo-700"
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </form>
+                <div className="p-4 border-t bg-white rounded-b-xl">
+                  <RichTextInput
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onSend={handleSendMessage}
+                    disabled={sendMessageMutation.isPending}
+                    placeholder="Type a message..."
+                  />
+                </div>
               </Card>
             ) : (
               <Card className="border-0 shadow-sm h-[600px] flex items-center justify-center">

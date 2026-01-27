@@ -10,6 +10,7 @@ import { Send, Users, Circle } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import RichTextInput from '../messages/RichTextInput';
 
 export default function GroupChatInterface({ group, currentUser }) {
   const [messageText, setMessageText] = useState('');
@@ -211,24 +212,15 @@ export default function GroupChatInterface({ group, currentUser }) {
       </div>
 
       {/* Message Input */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t bg-white rounded-b-xl">
-        <div className="flex gap-2">
-          <Input
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1"
-            disabled={sendMessageMutation.isPending}
-          />
-          <Button
-            type="submit"
-            disabled={!messageText.trim() || sendMessageMutation.isPending}
-            className="bg-emerald-600 hover:bg-emerald-700"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-      </form>
+      <div className="p-4 border-t bg-white rounded-b-xl">
+        <RichTextInput
+          value={messageText}
+          onChange={(e) => setMessageText(e.target.value)}
+          onSend={handleSendMessage}
+          disabled={sendMessageMutation.isPending}
+          placeholder="Type a message..."
+        />
+      </div>
     </Card>
   );
 }
