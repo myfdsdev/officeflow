@@ -338,7 +338,12 @@ export default function DirectMessages() {
                       <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${selectedUser.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{selectedUser.full_name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-900">{selectedUser.full_name}</h3>
+                        {starredConversations.includes(selectedUser.id) && (
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         <p className="text-sm text-gray-500">
                           {selectedUser.is_online ? 'Online' : 'Offline'}
@@ -354,6 +359,16 @@ export default function DirectMessages() {
                         if (action === 'copy') {
                           navigator.clipboard.writeText(selectedUser.email);
                           toast.success('Email copied to clipboard');
+                        } else if (action === 'star') {
+                          toggleStar(selectedUser.id);
+                        } else if (action === 'search') {
+                          const query = prompt('Search in conversation:');
+                          if (query) setSearchQuery(query);
+                        } else if (action === 'hide') {
+                          setSelectedUser(null);
+                          toast.success('Conversation hidden');
+                        } else if (action === 'view-profile') {
+                          toast.success('Profile view coming soon');
                         } else {
                           toast.success(`${action} feature coming soon`);
                         }

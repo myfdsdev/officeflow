@@ -12,10 +12,12 @@ import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import RichTextInput from '../messages/RichTextInput';
 import GroupConversationMenu from './GroupConversationMenu';
+import GroupMembersDialog from './GroupMembersDialog';
 import { toast } from 'react-hot-toast';
 
 export default function GroupChatInterface({ group, currentUser }) {
   const [messageText, setMessageText] = useState('');
+  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -151,6 +153,18 @@ export default function GroupChatInterface({ group, currentUser }) {
               if (action === 'copy') {
                 navigator.clipboard.writeText(group.group_name);
                 toast.success('Group name copied');
+              } else if (action === 'view-members') {
+                setMembersDialogOpen(true);
+              } else if (action === 'add-member') {
+                setMembersDialogOpen(true);
+              } else if (action === 'star') {
+                toast.success('Starred conversation');
+              } else if (action === 'search') {
+                toast.success('Search feature coming soon');
+              } else if (action === 'settings') {
+                toast.success('Group settings coming soon');
+              } else if (action === 'hide') {
+                toast.success('Conversation hidden');
               } else {
                 toast.success(`${action} feature coming soon`);
               }
@@ -234,6 +248,14 @@ export default function GroupChatInterface({ group, currentUser }) {
           placeholder="Type a message..."
         />
       </div>
-    </Card>
-  );
-}
+      </Card>
+
+      <GroupMembersDialog
+      open={membersDialogOpen}
+      onClose={() => setMembersDialogOpen(false)}
+      group={group}
+      currentUser={currentUser}
+      />
+      </>
+      );
+      }
