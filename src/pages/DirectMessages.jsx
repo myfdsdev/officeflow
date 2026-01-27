@@ -9,7 +9,7 @@ import NotificationBell from '../components/notifications/NotificationBell';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send, Megaphone, Pin } from "lucide-react";
+import { MessageCircle, Send, Megaphone, Pin, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -24,8 +24,25 @@ export default function DirectMessages() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [messageText, setMessageText] = useState('');
   const [showBroadcast, setShowBroadcast] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [starredConversations, setStarredConversations] = useState(() => {
+    const saved = localStorage.getItem('starredConversations');
+    return saved ? JSON.parse(saved) : [];
+  });
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
+
+  // Toggle star conversation
+  const toggleStar = (userId) => {
+    setStarredConversations(prev => {
+      const newStarred = prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId];
+      localStorage.setItem('starredConversations', JSON.stringify(newStarred));
+      return newStarred;
+    });
+    toast.success(starredConversations.includes(userId) ? 'Unstarred conversation' : 'Starred conversation');
+  };
 
   useEffect(() => {
     const initUser = async () => {
@@ -59,7 +76,7 @@ export default function DirectMessages() {
   }, [queryClient]);
 
   // Fetch messages for the selected conversation
-  const { data: messages = [], isLoading: loadingMessages, error: messagesError } = useQuery({
+  const { data: allConversationMessages = [], isLoading: loadingMessages, error: messagesError } = useQuery({
     queryKey: ['messages', user?.id, selectedUser?.id],
     queryFn: async () => {
       if (!user || !selectedUser) return [];
@@ -83,6 +100,13 @@ export default function DirectMessages() {
     enabled: !!user && !!selectedUser,
     refetchInterval: 3000,
   });
+
+  // Filter messages based on search
+  const messages = searchQuery
+    ? allConversationMessages.filter(msg => 
+        msg.message_text.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allConversationMessages;
 
   // Real-time message subscription
   useEffect(() => {
@@ -379,16 +403,38 @@ export default function DirectMessages() {
 
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto bg-gray-50 p-4 space-y-4">
+                  {searchQuery && (
+                    <div className="bg-indigo-50 px-4 py-2 rounded-lg flex items-center justify-between">
+                      <span className="text-sm text-indigo-700">
+                        {messages.length} result(s) for "{searchQuery}"
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setSearchQuery('')}
+                        className="text-indigo-600"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  )}
                   {loadingMessages ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="animate-pulse text-gray-400">Loading messages...</div>
                     </div>
-                  ) : messages.length === 0 ? (
+                  ) : messages.length === 0 && !searchQuery ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="text-center">
                         <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-2" />
                         <p className="text-gray-400">No messages yet</p>
                         <p className="text-sm text-gray-400">Start the conversation!</p>
+                      </div>
+                    </div>
+                  ) : messages.length === 0 && searchQuery ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-400">No messages found</p>
                       </div>
                     </div>
                   ) : (
