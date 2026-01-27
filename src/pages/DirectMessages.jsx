@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { MessageCircle, Send, Megaphone, Pin } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { utcToZonedTime } from "date-fns-tz";
+import { toZonedTime } from "date-fns-tz";
 import MessageContextMenu from '../components/messages/MessageContextMenu';
 import { toast } from 'react-hot-toast';
 
