@@ -180,8 +180,8 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
         </Button>
       </div>
 
-      {/* Text Input Area */}
-      <div className="px-3 py-2">
+      {/* Text Input Area with Send Button */}
+      <div className="px-3 py-2 relative">
         <textarea
           ref={textareaRef}
           value={value}
@@ -189,89 +189,86 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
-          className="w-full bg-transparent border-0 focus:outline-none resize-none min-h-[60px] max-h-[200px] text-gray-900 placeholder:text-gray-400"
+          className="w-full bg-transparent border-0 focus:outline-none resize-none min-h-[60px] max-h-[200px] text-gray-900 placeholder:text-gray-400 pr-12"
           rows={2}
         />
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex items-center justify-between px-3 py-2 border-t bg-white rounded-b-lg">
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-gray-500"
-            title="Attach File"
-          >
-            <Paperclip className="w-4 h-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-gray-500"
-            title="Attach Image"
-          >
-            <Image className="w-4 h-4" />
-          </Button>
-          
-          <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-gray-500"
-                title="Emoji"
-              >
-                <Smile className="w-4 h-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-2">
-              <div className="grid grid-cols-8 gap-1 max-h-64 overflow-y-auto">
-                {emojis.map((emoji, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => insertEmoji(emoji)}
-                    className="text-2xl hover:bg-gray-100 rounded p-1 transition-colors"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-gray-500"
-            title="Voice Message"
-          >
-            <Mic className="w-4 h-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-gray-500"
-            title="Video Message"
-          >
-            <Video className="w-4 h-4" />
-          </Button>
-        </div>
-
         <Button
           type="button"
           onClick={onSend}
           disabled={!value.trim() || disabled}
-          className="bg-indigo-600 hover:bg-indigo-700 h-8"
-          size="sm"
+          className="absolute right-4 bottom-4 bg-indigo-600 hover:bg-indigo-700 h-9 w-9 rounded-full p-0"
+          size="icon"
         >
           <Send className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-1 px-3 py-2 border-t bg-white rounded-b-lg">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-gray-500"
+          title="Attach File"
+        >
+          <Paperclip className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-gray-500"
+          title="Attach Image"
+        >
+          <Image className="w-4 h-4" />
+        </Button>
+        
+        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-gray-500"
+              title="Emoji"
+            >
+              <Smile className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-2">
+            <div className="grid grid-cols-8 gap-1 max-h-64 overflow-y-auto">
+              {emojis.map((emoji, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => insertEmoji(emoji)}
+                  className="text-2xl hover:bg-gray-100 rounded p-1 transition-colors"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-gray-500"
+          title="Voice Message"
+        >
+          <Mic className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-gray-500"
+          title="Video Message"
+        >
+          <Video className="w-4 h-4" />
         </Button>
       </div>
     </div>
