@@ -293,16 +293,31 @@ export default function DirectMessages() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* User List Sidebar */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
+            <GroupChatList
+              currentUser={user}
+              onGroupSelect={(group) => {
+                setSelectedGroup(group);
+                setSelectedUser(null);
+              }}
+            />
             <DirectMessagesList 
               currentUser={user} 
-              onUserSelect={setSelectedUser}
+              onUserSelect={(user) => {
+                setSelectedUser(user);
+                setSelectedGroup(null);
+              }}
             />
           </div>
 
           {/* Chat Area */}
           <div className="lg:col-span-2">
-            {selectedUser ? (
+            {selectedGroup ? (
+              <GroupChatInterface
+                group={selectedGroup}
+                currentUser={user}
+              />
+            ) : selectedUser ? (
               <Card className="border-0 shadow-sm h-[600px] flex flex-col">
                 {/* Chat Header */}
                 <div className="p-4 border-b bg-white rounded-t-xl">
@@ -457,8 +472,8 @@ export default function DirectMessages() {
                 </div>
               </Card>
             )}
-            </div>
-            </div>
+          </div>
+        </div>
       </div>
 
       {/* Broadcast Dialog */}
