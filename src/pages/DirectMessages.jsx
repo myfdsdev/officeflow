@@ -3,6 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DirectMessagesList from '../components/messages/DirectMessagesList';
 import BroadcastMessageDialog from '../components/messages/BroadcastMessageDialog';
+import GroupChatList from '../components/groups/GroupChatList';
+import GroupChatInterface from '../components/groups/GroupChatInterface';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +17,7 @@ import { toast } from 'react-hot-toast';
 export default function DirectMessages() {
   const [user, setUser] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [messageText, setMessageText] = useState('');
   const [showBroadcast, setShowBroadcast] = useState(false);
   const messagesEndRef = useRef(null);
@@ -449,13 +452,13 @@ export default function DirectMessages() {
                     Select a conversation
                   </h3>
                   <p className="text-gray-500">
-                    Choose from Admins or Team Members to start messaging
+                    Choose a group chat or direct message to start chatting
                   </p>
                 </div>
               </Card>
             )}
-          </div>
-        </div>
+            </div>
+            </div>
       </div>
 
       {/* Broadcast Dialog */}
