@@ -430,7 +430,7 @@ export default function DirectMessages() {
                                 )}
                               </div>
                               <p className={`text-xs text-gray-400 mt-1 ${isSender ? 'text-right' : 'text-left'}`}>
-                                {format(new Date(msg.created_date), 'h:mm a')}
+                                {format(new Date(msg.created_date), 'MMM d, h:mm a')}
                               </p>
                             </div>
                           </motion.div>
