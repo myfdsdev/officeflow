@@ -15,6 +15,7 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
     admins: true,
     team: true,
   });
+  const [unreadCounts, setUnreadCounts] = useState({});
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -27,6 +28,7 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
         
         if (response.data && response.data.users) {
           setUsers(response.data.users);
+          await fetchUnreadCounts(response.data.users);
         } else {
           setUsers([]);
         }
@@ -36,11 +38,32 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
       }
     };
 
+    const fetchUnreadCounts = async (usersList) => {
+      if (!currentUser) return;
+      
+      try {
+        const messages = await base44.entities.Message.filter({
+          receiver_id: currentUser.id,
+          is_read: false
+        });
+        
+        const counts = {};
+        messages.forEach(msg => {
+          const userId = msg.sender_id;
+          counts[userId] = (counts[userId] || 0) + 1;
+        });
+        
+        setUnreadCounts(counts);
+      } catch (error) {
+        console.error('Failed to fetch unread counts:', error);
+      }
+    };
+
     fetchUsers();
 
     // Subscribe to real-time message updates to refresh user list
     const messageUnsubscribe = base44.entities.Message.subscribe((event) => {
-      if (event.type === 'create') {
+      if (event.type === 'create' || event.type === 'update') {
         const msg = event.data;
         // If message involves current user, refresh the user list
         if (currentUser && (msg.sender_id === currentUser.id || msg.receiver_id === currentUser.id)) {
@@ -90,45 +113,55 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
   const admins = users.filter(u => u.role === 'admin');
   const teamMembers = users.filter(u => u.role === 'user');
 
-  const UserItem = ({ user, isCurrentUser }) => (
-    <motion.button
-      key={user.id}
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -10 }}
-      onClick={() => onUserSelect(user)}
-      className="group w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50 transition-colors text-left"
-    >
-      <div className="relative">
-        <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
-          {user.profile_photo ? (
-            <AvatarImage src={user.profile_photo} alt={user.full_name} />
-          ) : (
-            <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold text-sm">
-              {getInitials(user.full_name)}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div className="absolute -bottom-0.5 -right-0.5">
-          <OnlineStatusIndicator isOnline={user.is_online} size="sm" />
+  const UserItem = ({ user, isCurrentUser }) => {
+    const unreadCount = unreadCounts[user.id] || 0;
+    
+    return (
+      <motion.button
+        key={user.id}
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -10 }}
+        onClick={() => onUserSelect(user)}
+        className="group w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50 transition-colors text-left"
+      >
+        <div className="relative">
+          <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
+            {user.profile_photo ? (
+              <AvatarImage src={user.profile_photo} alt={user.full_name} />
+            ) : (
+              <AvatarFallback className="bg-indigo-100 text-indigo-600 font-semibold text-sm">
+                {getInitials(user.full_name)}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          <div className="absolute -bottom-0.5 -right-0.5">
+            <OnlineStatusIndicator isOnline={user.is_online} size="sm" />
+          </div>
         </div>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-medium text-gray-900 text-sm truncate">
-            {user.full_name}
-          </p>
-          {isCurrentUser && (
-            <Badge variant="outline" className="text-xs">You</Badge>
-          )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-gray-900 text-sm truncate">
+              {user.full_name}
+            </p>
+            {isCurrentUser && (
+              <Badge variant="outline" className="text-xs">You</Badge>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 truncate">{getLastSeenText(user)}</p>
         </div>
-        <p className="text-xs text-gray-500 truncate">{getLastSeenText(user)}</p>
-      </div>
-      <div className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-        Chat
-      </div>
-    </motion.button>
-  );
+        {unreadCount > 0 ? (
+          <Badge className="bg-rose-500 text-white h-5 min-w-5 px-1.5 flex items-center justify-center">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </Badge>
+        ) : (
+          <div className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Chat
+          </div>
+        )}
+      </motion.button>
+    );
+  };
 
   return (
     <Card className="border-0 shadow-sm">
