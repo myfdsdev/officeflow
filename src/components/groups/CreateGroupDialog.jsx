@@ -150,8 +150,7 @@ export default function CreateGroupDialog({ open, onClose, currentUser }) {
               {users.map(user => (
                 <div
                   key={user.id}
-                  className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-                  onClick={() => toggleMember(user.id)}
+                  className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg"
                 >
                   <Checkbox
                     checked={selectedMembers.includes(user.id)}
