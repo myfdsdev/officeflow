@@ -5,6 +5,7 @@ import DirectMessagesList from '../components/messages/DirectMessagesList';
 import BroadcastMessageDialog from '../components/messages/BroadcastMessageDialog';
 import GroupChatList from '../components/groups/GroupChatList';
 import GroupChatInterface from '../components/groups/GroupChatInterface';
+import NotificationBell from '../components/notifications/NotificationBell';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -280,15 +281,18 @@ export default function DirectMessages() {
             <h1 className="text-3xl font-bold text-gray-900">Direct Messages</h1>
             <p className="text-gray-500 mt-1">Connect with your team</p>
           </div>
-          {user.role === 'admin' && (
-            <Button
-              onClick={() => setShowBroadcast(true)}
-              className="bg-indigo-600 hover:bg-indigo-700"
-            >
-              <Megaphone className="w-4 h-4 mr-2" />
-              Broadcast
-            </Button>
-          )}
+          <div className="flex items-center gap-3">
+            <NotificationBell userEmail={user.email} />
+            {user.role === 'admin' && (
+              <Button
+                onClick={() => setShowBroadcast(true)}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                <Megaphone className="w-4 h-4 mr-2" />
+                Broadcast
+              </Button>
+            )}
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
