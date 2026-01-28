@@ -138,12 +138,7 @@ export default function DirectMessages() {
   }, [messages]);
 
   const sendMessageMutation = useMutation({
-    mutationFn: async (htmlContent) => {
-      // Extract plain text from HTML for search and notifications
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = htmlContent;
-      const plainText = tempDiv.textContent || tempDiv.innerText || '';
-
+    mutationFn: async (text) => {
       const newMessage = await base44.entities.Message.create({
         sender_id: user.id,
         sender_email: user.email,
@@ -151,8 +146,7 @@ export default function DirectMessages() {
         receiver_id: selectedUser.id,
         receiver_email: selectedUser.email,
         receiver_name: selectedUser.full_name,
-        message_text: plainText,
-        message_html: htmlContent,
+        message_text: text,
         is_read: false,
         is_edited: false,
         is_pinned: false,
@@ -161,10 +155,11 @@ export default function DirectMessages() {
       });
 
       // Only create notification for receiver if not muted
+      // Notification will be automatically marked as read if they're on DirectMessages page
       await base44.entities.Notification.create({
         user_email: selectedUser.email,
         title: 'New Message',
-        message: `${user.full_name}: ${plainText.substring(0, 50)}${plainText.length > 50 ? '...' : ''}`,
+        message: `${user.full_name}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`,
         type: 'new_message',
         is_read: false,
         related_id: newMessage.id,
@@ -290,13 +285,8 @@ export default function DirectMessages() {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    // Extract plain text to check if message is empty
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = messageText;
-    const plainText = tempDiv.textContent || tempDiv.innerText || '';
-    
-    if (plainText.trim() && !sendMessageMutation.isPending) {
-      sendMessageMutation.mutate(messageText);
+    if (messageText.trim() && !sendMessageMutation.isPending) {
+      sendMessageMutation.mutate(messageText.trim());
     }
   };
 
@@ -494,15 +484,12 @@ export default function DirectMessages() {
                                         : 'bg-white text-gray-900'
                                 } ${msg.is_pinned ? 'ring-2 ring-amber-300' : ''}`}>
                                   <div className="flex items-start gap-2">
-                                    <div 
-                                      className="text-sm break-words flex-1 prose prose-sm max-w-none"
-                                      dangerouslySetInnerHTML={{ 
-                                        __html: msg.message_html || msg.message_text 
-                                      }}
-                                    />
-                                    {msg.is_edited && !isDeleted && (
-                                      <span className="text-xs opacity-70 ml-2">(edited)</span>
-                                    )}
+                                    <p className="text-sm break-words flex-1">
+                                      {msg.message_text}
+                                      {msg.is_edited && !isDeleted && (
+                                        <span className="text-xs opacity-70 ml-2">(edited)</span>
+                                      )}
+                                    </p>
                                   </div>
                                 </div>
                                 {!isDeleted && (
@@ -532,7 +519,7 @@ export default function DirectMessages() {
                 </div>
 
                 {/* Message Input */}
-                <div className="p-3 border-t bg-white rounded-b-xl">
+                <div className="p-4 border-t bg-white rounded-b-xl">
                   <RichTextInput
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
