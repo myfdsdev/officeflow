@@ -28,6 +28,7 @@ import {
 import NotificationBell from './components/notifications/NotificationBell';
 import { useUserActivity } from './components/hooks/useUserActivity';
 import { useAutoCheckIn } from './components/hooks/useAutoCheckIn';
+import { useDesktopNotifications } from './components/hooks/useDesktopNotifications';
 import OnlineStatusIndicator from './components/admin/OnlineStatusIndicator';
 
 const employeeNavItems = [
