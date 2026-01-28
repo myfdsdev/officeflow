@@ -13,6 +13,8 @@ import { toZonedTime } from "date-fns-tz";
 import RichTextInput from '../messages/RichTextInput';
 import GroupConversationMenu from './GroupConversationMenu';
 import GroupMembersDialog from './GroupMembersDialog';
+import TypingIndicator from '../messages/TypingIndicator';
+import { useTypingIndicator, useTypingStatus } from '../hooks/useTypingIndicator';
 import { toast } from 'react-hot-toast';
 
 export default function GroupChatInterface({ group, currentUser }) {
@@ -20,6 +22,10 @@ export default function GroupChatInterface({ group, currentUser }) {
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
+
+  // Typing indicator hooks
+  const { setTyping, clearTypingStatus } = useTypingIndicator(currentUser, group?.id, 'group', !!group);
+  const typingUsers = useTypingStatus(group?.id, 'group', currentUser?.id);
 
   // Fetch group members
   const { data: members = [] } = useQuery({
@@ -103,10 +109,29 @@ export default function GroupChatInterface({ group, currentUser }) {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (messageText.trim() && !sendMessageMutation.isPending) {
-      sendMessageMutation.mutate(messageText.trim());
+    // Extract plain text to check if message is empty
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = messageText;
+    const plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+    if (plainText.trim() && !sendMessageMutation.isPending) {
+      clearTypingStatus(); // Clear typing indicator when sending
+      sendMessageMutation.mutate(messageText);
     }
   };
+
+  // Handle typing indicator on text change
+  const handleInputChange = (e) => {
+    setMessageText(e.target.value);
+    setTyping(); // Trigger typing indicator with debounce
+  };
+
+  // Clear typing when switching groups
+  useEffect(() => {
+    return () => {
+      clearTypingStatus();
+    };
+  }, [group?.id, clearTypingStatus]);
 
   const getInitials = (name) => {
     if (!name) return "?";
@@ -175,7 +200,7 @@ export default function GroupChatInterface({ group, currentUser }) {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto bg-gray-50 p-4 space-y-4 flex flex-col">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -239,11 +264,18 @@ export default function GroupChatInterface({ group, currentUser }) {
         )}
       </div>
 
+      {/* Typing Indicator */}
+      {typingUsers.length > 0 && (
+        <div className="px-4 pb-2">
+          <TypingIndicator typingUsers={typingUsers} />
+        </div>
+      )}
+
       {/* Message Input */}
-      <div className="p-4 border-t bg-white rounded-b-xl">
+      <div className="p-3 border-t bg-white rounded-b-xl">
         <RichTextInput
           value={messageText}
-          onChange={(e) => setMessageText(e.target.value)}
+          onChange={handleInputChange}
           onSend={handleSendMessage}
           disabled={sendMessageMutation.isPending}
           placeholder="Type a message..."
