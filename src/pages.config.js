@@ -62,6 +62,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Settings from './pages/Settings';
 import Welcome from './pages/Welcome';
 import Pricing from './pages/Pricing';
+import Checkout from './pages/Checkout';
 import __Layout from './Layout.jsx';
 
 
@@ -81,6 +82,7 @@ export const PAGES = {
     "Settings": Settings,
     "Welcome": Welcome,
     "Pricing": Pricing,
+    "Checkout": Checkout,
 }
 
 export const pagesConfig = {
