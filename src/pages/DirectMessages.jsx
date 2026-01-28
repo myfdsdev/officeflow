@@ -6,7 +6,6 @@ import BroadcastMessageDialog from '../components/messages/BroadcastMessageDialo
 import GroupChatList from '../components/groups/GroupChatList';
 import GroupChatInterface from '../components/groups/GroupChatInterface';
 import NotificationBell from '../components/notifications/NotificationBell';
-import TypingIndicator from '../components/messages/TypingIndicator';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,6 @@ import MessageContextMenu from '../components/messages/MessageContextMenu';
 import RichTextInput from '../components/messages/RichTextInput';
 import ConversationMenu from '../components/messages/ConversationMenu.jsx';
 import UserProfileDialog from '../components/messages/UserProfileDialog';
-import { useTypingIndicator, useTypingStatus } from '../components/hooks/useTypingIndicator';
 import { toast } from 'react-hot-toast';
 
 export default function DirectMessages() {
@@ -36,10 +34,6 @@ export default function DirectMessages() {
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
-  // Typing indicator hooks
-  const { setTyping, clearTypingStatus } = useTypingIndicator(user, selectedUser?.id, 'direct', !!selectedUser);
-  const typingUsers = useTypingStatus(selectedUser?.id, 'direct', user?.id);
-
   // Toggle star conversation
   const toggleStar = (userId) => {
     setStarredConversations(prev => {
@@ -51,13 +45,6 @@ export default function DirectMessages() {
     });
     toast.success(starredConversations.includes(userId) ? 'Unstarred conversation' : 'Starred conversation');
   };
-
-  // Clear typing when switching conversations
-  useEffect(() => {
-    return () => {
-      clearTypingStatus();
-    };
-  }, [selectedUser?.id, clearTypingStatus]);
 
   useEffect(() => {
     const initUser = async () => {
@@ -309,15 +296,8 @@ export default function DirectMessages() {
     const plainText = tempDiv.textContent || tempDiv.innerText || '';
     
     if (plainText.trim() && !sendMessageMutation.isPending) {
-      clearTypingStatus(); // Clear typing indicator when sending
       sendMessageMutation.mutate(messageText);
     }
-  };
-
-  // Handle typing indicator on text change
-  const handleInputChange = (e) => {
-    setMessageText(e.target.value);
-    setTyping(); // Trigger typing indicator with debounce
   };
 
   if (!user) {
@@ -434,7 +414,7 @@ export default function DirectMessages() {
                 </div>
 
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto bg-gray-50 p-4 space-y-4 flex flex-col">
+                <div className="flex-1 overflow-y-auto bg-gray-50 p-4 space-y-4">
                   {searchQuery && (
                     <div className="bg-indigo-50 px-4 py-2 rounded-lg flex items-center justify-between">
                       <span className="text-sm text-indigo-700">
@@ -547,27 +527,20 @@ export default function DirectMessages() {
                         );
                       })}
                       <div ref={messagesEndRef} />
-                      </>
-                      )}
-                      </div>
+                    </>
+                  )}
+                </div>
 
-                      {/* Typing Indicator */}
-                      {typingUsers.length > 0 && (
-                      <div className="px-4 pb-2">
-                      <TypingIndicator typingUsers={typingUsers} />
-                      </div>
-                      )}
-
-                      {/* Message Input */}
-                      <div className="p-3 border-t bg-white rounded-b-xl">
-                      <RichTextInput
-                      value={messageText}
-                      onChange={handleInputChange}
-                      onSend={handleSendMessage}
-                      disabled={sendMessageMutation.isPending}
-                      placeholder="Type a message..."
-                      />
-                      </div>
+                {/* Message Input */}
+                <div className="p-3 border-t bg-white rounded-b-xl">
+                  <RichTextInput
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onSend={handleSendMessage}
+                    disabled={sendMessageMutation.isPending}
+                    placeholder="Type a message..."
+                  />
+                </div>
               </Card>
             ) : (
               <Card className="border-0 shadow-sm h-[600px] flex items-center justify-center">
