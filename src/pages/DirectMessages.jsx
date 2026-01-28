@@ -18,7 +18,6 @@ import RichTextInput from '../components/messages/RichTextInput';
 import ConversationMenu from '../components/messages/ConversationMenu.jsx';
 import UserProfileDialog from '../components/messages/UserProfileDialog';
 import { toast } from 'react-hot-toast';
-import ReactMarkdown from 'react-markdown';
 
 export default function DirectMessages() {
   const [user, setUser] = useState(null);
@@ -485,34 +484,12 @@ export default function DirectMessages() {
                                         : 'bg-white text-gray-900'
                                 } ${msg.is_pinned ? 'ring-2 ring-amber-300' : ''}`}>
                                   <div className="flex items-start gap-2">
-                                    <div className="text-sm break-words flex-1 prose prose-sm max-w-none">
-                                      <ReactMarkdown
-                                        components={{
-                                          p: ({ children }) => <p className="m-0">{children}</p>,
-                                          strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-                                          em: ({ children }) => <em className="italic">{children}</em>,
-                                          del: ({ children }) => <del className="line-through">{children}</del>,
-                                          a: ({ href, children }) => (
-                                            <a href={href} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">
-                                              {children}
-                                            </a>
-                                          ),
-                                          img: ({ src, alt }) => (
-                                            <img src={src} alt={alt} className="max-w-full h-auto rounded-lg mt-2" />
-                                          ),
-                                          ul: ({ children }) => <ul className="list-disc pl-4 my-1">{children}</ul>,
-                                          ol: ({ children }) => <ol className="list-decimal pl-4 my-1">{children}</ol>,
-                                          code: ({ children }) => (
-                                            <code className="bg-black/10 px-1 py-0.5 rounded text-xs">{children}</code>
-                                          ),
-                                        }}
-                                      >
-                                        {msg.message_text}
-                                      </ReactMarkdown>
+                                    <p className="text-sm break-words flex-1">
+                                      {msg.message_text}
                                       {msg.is_edited && !isDeleted && (
                                         <span className="text-xs opacity-70 ml-2">(edited)</span>
                                       )}
-                                    </div>
+                                    </p>
                                   </div>
                                 </div>
                                 {!isDeleted && (
