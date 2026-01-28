@@ -23,7 +23,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export default function RichTextInput({ value, onChange, onSend, disabled, placeholder = "Type a message..." }) {
+export default function RichTextInput({ onSend, disabled, placeholder = "Type a message..." }) {
+  const [value, setValue] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef(null);
 
@@ -69,7 +70,7 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
     }
 
     const newValue = value.substring(0, start) + formattedText + value.substring(end);
-    onChange({ target: { value: newValue } });
+    setValue(newValue);
     
     setTimeout(() => {
       textarea.focus();
@@ -80,7 +81,7 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
 
   const insertEmoji = (emoji) => {
     const newValue = value + emoji;
-    onChange({ target: { value: newValue } });
+    setValue(newValue);
     setShowEmojiPicker(false);
     textareaRef.current?.focus();
   };
@@ -89,8 +90,16 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (value.trim()) {
-        onSend(e);
+        onSend(value.trim());
+        setValue('');
       }
+    }
+  };
+
+  const handleSendClick = () => {
+    if (value.trim()) {
+      onSend(value.trim());
+      setValue('');
     }
   };
 
@@ -185,7 +194,7 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
         <textarea
           ref={textareaRef}
           value={value}
-          onChange={onChange}
+          onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
@@ -194,7 +203,7 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
         />
         <Button
           type="button"
-          onClick={onSend}
+          onClick={handleSendClick}
           disabled={!value.trim() || disabled}
           className="absolute right-4 bottom-4 bg-indigo-600 hover:bg-indigo-700 h-9 w-9 rounded-full p-0"
           size="icon"

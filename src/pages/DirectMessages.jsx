@@ -23,7 +23,6 @@ export default function DirectMessages() {
   const [user, setUser] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [messageText, setMessageText] = useState('');
   const [showBroadcast, setShowBroadcast] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [starredConversations, setStarredConversations] = useState(() => {
@@ -169,7 +168,6 @@ export default function DirectMessages() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages'] });
-      setMessageText('');
     },
   });
 
@@ -283,10 +281,9 @@ export default function DirectMessages() {
     markAsRead();
   }, [user, selectedUser, messages, queryClient]);
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (messageText.trim() && !sendMessageMutation.isPending) {
-      sendMessageMutation.mutate(messageText.trim());
+  const handleSendMessage = (text) => {
+    if (text && !sendMessageMutation.isPending) {
+      sendMessageMutation.mutate(text);
     }
   };
 
@@ -521,8 +518,6 @@ export default function DirectMessages() {
                 {/* Message Input */}
                 <div className="p-4 border-t bg-white rounded-b-xl">
                   <RichTextInput
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
                     onSend={handleSendMessage}
                     disabled={sendMessageMutation.isPending}
                     placeholder="Type a message..."
