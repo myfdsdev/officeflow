@@ -25,10 +25,7 @@ import {
 
 export default function RichTextInput({ value, onChange, onSend, disabled, placeholder = "Type a message..." }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const textareaRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const imageInputRef = useRef(null);
 
   const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '😎', '🤓', '🧐', '😕', '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '👍', '👎', '👏', '🙌', '👋', '🤝', '🙏', '💪', '❤️', '🔥', '✨', '🎉', '🎊', '💯'];
 
@@ -94,30 +91,6 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
       if (value.trim()) {
         onSend(e);
       }
-    }
-  };
-
-  const handleFileUpload = async (e, type) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const { base44 } = await import('@/api/base44Client');
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      
-      const fileText = type === 'image' 
-        ? `![${file.name}](${file_url})` 
-        : `[📎 ${file.name}](${file_url})`;
-      
-      const newValue = value + (value ? '\n' : '') + fileText;
-      onChange({ target: { value: newValue } });
-    } catch (error) {
-      alert('Failed to upload file');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      if (imageInputRef.current) imageInputRef.current.value = '';
     }
   };
 
@@ -232,39 +205,21 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
 
       {/* Action Buttons */}
       <div className="flex items-center gap-1 px-3 py-2 border-t bg-white rounded-b-lg">
-        <input
-          ref={fileInputRef}
-          type="file"
-          onChange={(e) => handleFileUpload(e, 'file')}
-          className="hidden"
-        />
         <Button
           type="button"
           variant="ghost"
           size="icon"
           className="h-8 w-8 text-gray-500"
           title="Attach File"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
         >
           <Paperclip className="w-4 h-4" />
         </Button>
-        
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleFileUpload(e, 'image')}
-          className="hidden"
-        />
         <Button
           type="button"
           variant="ghost"
           size="icon"
           className="h-8 w-8 text-gray-500"
           title="Attach Image"
-          onClick={() => imageInputRef.current?.click()}
-          disabled={uploading}
         >
           <Image className="w-4 h-4" />
         </Button>
@@ -302,8 +257,7 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
           variant="ghost"
           size="icon"
           className="h-8 w-8 text-gray-500"
-          title="Voice Message (Coming Soon)"
-          onClick={() => alert('Voice message feature coming soon!')}
+          title="Voice Message"
         >
           <Mic className="w-4 h-4" />
         </Button>
@@ -312,8 +266,7 @@ export default function RichTextInput({ value, onChange, onSend, disabled, place
           variant="ghost"
           size="icon"
           className="h-8 w-8 text-gray-500"
-          title="Video Message (Coming Soon)"
-          onClick={() => alert('Video message feature coming soon!')}
+          title="Video Message"
         >
           <Video className="w-4 h-4" />
         </Button>
