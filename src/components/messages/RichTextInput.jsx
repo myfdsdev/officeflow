@@ -220,7 +220,6 @@ export default function RichTextInput({ onSend, disabled, placeholder = "Type a 
           size="icon"
           className="h-8 w-8 text-gray-500"
           title="Attach File"
-          onClick={() => alert('File attachment coming soon')}
         >
           <Paperclip className="w-4 h-4" />
         </Button>
@@ -230,7 +229,6 @@ export default function RichTextInput({ onSend, disabled, placeholder = "Type a 
           size="icon"
           className="h-8 w-8 text-gray-500"
           title="Attach Image"
-          onClick={() => alert('Image attachment coming soon')}
         >
           <Image className="w-4 h-4" />
         </Button>
@@ -269,7 +267,6 @@ export default function RichTextInput({ onSend, disabled, placeholder = "Type a 
           size="icon"
           className="h-8 w-8 text-gray-500"
           title="Voice Message"
-          onClick={() => alert('Voice message coming soon')}
         >
           <Mic className="w-4 h-4" />
         </Button>
@@ -279,7 +276,6 @@ export default function RichTextInput({ onSend, disabled, placeholder = "Type a 
           size="icon"
           className="h-8 w-8 text-gray-500"
           title="Video Message"
-          onClick={() => alert('Video message coming soon')}
         >
           <Video className="w-4 h-4" />
         </Button>
