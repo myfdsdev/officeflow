@@ -77,7 +77,7 @@ export default function DirectMessages() {
   }, [queryClient]);
 
   // Fetch messages for the selected conversation
-  const { data: allConversationMessages = [], isLoading: loadingMessages, error: messagesError } = useQuery({
+  const { data: allConversationMessages = [], isLoading: loadingMessages, error: messagesError, refetch } = useQuery({
     queryKey: ['messages', user?.id, selectedUser?.id],
     queryFn: async () => {
       if (!user || !selectedUser) return [];
@@ -99,6 +99,7 @@ export default function DirectMessages() {
       }
     },
     enabled: !!user && !!selectedUser,
+    refetchInterval: 2000,
   });
 
   // Filter messages based on search
