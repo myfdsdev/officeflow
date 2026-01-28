@@ -99,7 +99,6 @@ export default function DirectMessages() {
       }
     },
     enabled: !!user && !!selectedUser,
-    refetchInterval: 3000,
   });
 
   // Filter messages based on search
