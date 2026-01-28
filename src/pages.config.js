@@ -81,6 +81,8 @@ export const PAGES = {
     "Settings": Settings,
     "Welcome": Welcome,
     "DirectMessages": DirectMessages,
+    "Pricing": Pricing,
+    "Checkout": Checkout,
 }
 
 export const pagesConfig = {
