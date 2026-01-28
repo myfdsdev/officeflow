@@ -62,9 +62,12 @@ export default function Layout({ children, currentPageName }) {
 
   // Track user activity and update online status
   useUserActivity(user);
-  
+
   // Auto check-in on first load of the day
   useAutoCheckIn(user);
+
+  // Enable desktop notifications
+  useDesktopNotifications(user);
 
   const getInitials = (name) => {
     if (!name) return "?";
