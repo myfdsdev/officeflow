@@ -12,15 +12,11 @@ import { motion } from "framer-motion";
 import { User, Mail, Phone, Building, IdCard, Shield, Upload, Save } from "lucide-react";
 
 const departments = [
-  "Engineering",
-  "Sales",
-  "Marketing",
-  "HR",
-  "Finance",
-  "Operations",
-  "IT",
-  "Customer Support",
-  "Other"
+  "Video Editor",
+  "Graphic Designer",
+  "Web Designer",
+  "Content Writer",
+  "Developer"
 ];
 
 export default function MyProfile() {
