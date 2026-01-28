@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { format } from 'date-fns';
 
 const ACTIVITY_INTERVAL = 30000; // Update every 30 seconds
-const INACTIVITY_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+const INACTIVITY_THRESHOLD = 15 * 60 * 1000; // 15 minutes for auto checkout
 
 export function useUserActivity(user) {
   const activityTimerRef = useRef(null);
   const inactivityTimerRef = useRef(null);
+  const lastActivityRef = useRef(Date.now());
 
   const updateOnlineStatus = async (isOnline) => {
     if (!user?.email) return;
@@ -21,13 +23,60 @@ export function useUserActivity(user) {
     }
   };
 
+  const autoCheckOut = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      // Find active sessions
+      const activeSessions = await base44.entities.AttendanceSession.filter({
+        employee_id: user.id,
+        date: today,
+        is_active: true
+      });
+      
+      if (activeSessions && activeSessions.length > 0) {
+        const checkOutTime = new Date(lastActivityRef.current).toISOString();
+        
+        for (const session of activeSessions) {
+          // Calculate session duration
+          const checkInTime = new Date(session.check_in_time);
+          const checkOutTimeDate = new Date(checkOutTime);
+          const durationHours = (checkOutTimeDate - checkInTime) / (1000 * 60 * 60);
+          
+          // Update session
+          await base44.entities.AttendanceSession.update(session.id, {
+            check_out_time: checkOutTime,
+            session_duration: durationHours,
+            is_active: false,
+            check_out_reason: 'auto_inactive'
+          });
+        }
+        
+        // Recalculate attendance
+        await base44.functions.invoke('calculateAttendance', {
+          employee_id: user.id,
+          date: today
+        });
+        
+        console.log('Auto check-out due to inactivity');
+      }
+    } catch (error) {
+      console.error('Auto check-out failed:', error);
+    }
+  };
+
   const resetInactivityTimer = () => {
+    lastActivityRef.current = Date.now();
+    
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
     }
 
     inactivityTimerRef.current = setTimeout(() => {
       updateOnlineStatus(false);
+      autoCheckOut();
     }, INACTIVITY_THRESHOLD);
   };
 
@@ -56,15 +105,63 @@ export function useUserActivity(user) {
     resetInactivityTimer();
 
     // Handle page visibility change
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (document.hidden) {
         updateOnlineStatus(false);
+        // Don't auto checkout on visibility change, only on prolonged inactivity
       } else {
         updateOnlineStatus(true);
         resetInactivityTimer();
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Handle beforeunload (PC shutdown, browser close)
+    const handleBeforeUnload = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const activeSessions = await base44.entities.AttendanceSession.filter({
+          employee_id: user.id,
+          date: today,
+          is_active: true
+        });
+        
+        if (activeSessions && activeSessions.length > 0) {
+          const checkOutTime = new Date().toISOString();
+          
+          for (const session of activeSessions) {
+            const checkInTime = new Date(session.check_in_time);
+            const checkOutTimeDate = new Date(checkOutTime);
+            const durationHours = (checkOutTimeDate - checkInTime) / (1000 * 60 * 60);
+            
+            await base44.entities.AttendanceSession.update(session.id, {
+              check_out_time: checkOutTime,
+              session_duration: durationHours,
+              is_active: false,
+              check_out_reason: 'auto_shutdown'
+            });
+          }
+          
+          // Recalculate attendance
+          await base44.functions.invoke('calculateAttendance', {
+            employee_id: user.id,
+            date: today
+          });
+        }
+      } catch (error) {
+        console.error('Error during beforeunload:', error);
+      }
+      
+      // Use sendBeacon for reliable status update
+      navigator.sendBeacon('/api/user/status', JSON.stringify({
+        is_online: false,
+        last_active_time: new Date().toISOString(),
+      }));
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     // Cleanup
     return () => {
@@ -78,27 +175,10 @@ export function useUserActivity(user) {
         window.removeEventListener(event, handleActivity);
       });
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       
       // Set offline when unmounting
       updateOnlineStatus(false);
     };
-  }, [user?.email]);
-
-  // Handle logout
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (user?.email) {
-        // Use sendBeacon for reliable offline status on page close
-        const data = JSON.stringify({
-          is_online: false,
-          last_active_time: new Date().toISOString(),
-        });
-        
-        navigator.sendBeacon('/api/user/status', data);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [user?.email]);
+  }, [user?.email, user?.id]);
 }
