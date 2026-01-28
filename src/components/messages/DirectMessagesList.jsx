@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,7 +8,7 @@ import { MessageCircle, ChevronDown, ChevronRight, Shield, User } from "lucide-r
 import OnlineStatusIndicator from '../admin/OnlineStatusIndicator';
 import { formatDistanceToNow } from 'date-fns';
 
-export default function DirectMessagesList({ currentUser, onUserSelect }) {
+const DirectMessagesList = ({ currentUser, onUserSelect }) => {
   const [users, setUsers] = useState([]);
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedSections, setExpandedSections] = useState({
@@ -61,60 +61,44 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
 
     fetchUsers();
 
-    // Subscribe to real-time message updates to refresh user list
+    // Subscribe to real-time message updates - only update unread counts
     const messageUnsubscribe = base44.entities.Message.subscribe((event) => {
-      if (event.type === 'create' || event.type === 'update') {
+      if (event.type === 'create') {
         const msg = event.data;
-        // If message involves current user, refresh the user list
         if (currentUser && (msg.sender_id === currentUser.id || msg.receiver_id === currentUser.id)) {
-          fetchUsers();
+          fetchUnreadCounts(users);
         }
       }
     });
 
-    // Subscribe to real-time user updates to update user info
-    const userUnsubscribe = base44.entities.User.subscribe((event) => {
-      if (event.type === 'update' || event.type === 'create') {
-        fetchUsers(); // Refresh to include new users
-      }
-    });
+    // Do NOT subscribe to User updates (prevents sidebar blink on online status changes)
 
     return () => {
       messageUnsubscribe();
-      userUnsubscribe();
     };
-  }, [currentUser]);
+  }, [currentUser, users]);
 
-  const getInitials = (name) => {
+  const getInitials = useCallback((name) => {
     if (!name) return "?";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-  };
+  }, []);
 
-  const toggleSection = (section) => {
+  const toggleSection = useCallback((section) => {
     setExpandedSections(prev => ({
       ...prev,
       [section]: !prev[section]
     }));
-  };
+  }, []);
 
-  const getLastSeenText = (user) => {
-    if (user.is_online) return 'Online';
-    if (user.last_active_time) {
-      try {
-        return `Last seen ${formatDistanceToNow(new Date(user.last_active_time), { addSuffix: true })}`;
-      } catch (e) {
-        return 'Offline';
-      }
-    }
-    return 'Offline';
-  };
+  // Memoized grouped users to prevent re-computation
+  const { admins, teamMembers } = useMemo(() => ({
+    admins: users.filter(u => u.role === 'admin'),
+    teamMembers: users.filter(u => u.role === 'user')
+  }), [users]);
 
-  // Group users by role
-  const admins = users.filter(u => u.role === 'admin');
-  const teamMembers = users.filter(u => u.role === 'user');
-
-  const UserItem = ({ user, isCurrentUser }) => {
+  const UserItem = useCallback(({ user, isCurrentUser }) => {
     const unreadCount = unreadCounts[user.id] || 0;
+    const isOnline = user.is_online;
     
     return (
       <motion.button
@@ -123,9 +107,10 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -10 }}
         onClick={() => onUserSelect(user)}
-        className="group w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50 transition-colors text-left"
+        className="group w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50 text-left"
+        style={{ transition: 'background-color 0.15s ease-in-out' }}
       >
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <Avatar className="w-10 h-10 bg-indigo-100 text-indigo-600">
             {user.profile_photo ? (
               <AvatarImage src={user.profile_photo} alt={user.full_name} />
@@ -136,7 +121,7 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
             )}
           </Avatar>
           <div className="absolute -bottom-0.5 -right-0.5">
-            <OnlineStatusIndicator isOnline={user.is_online} size="sm" />
+            <OnlineStatusIndicator isOnline={isOnline} size="sm" />
           </div>
         </div>
         <div className="flex-1 min-w-0">
@@ -148,25 +133,28 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
               <Badge variant="outline" className="text-xs">You</Badge>
             )}
           </div>
-          <p className="text-xs text-gray-500 truncate">{getLastSeenText(user)}</p>
+          <p className="text-xs text-gray-500 truncate">
+            {isOnline ? 'Online' : 'Offline'}
+          </p>
         </div>
         {unreadCount > 0 ? (
-          <Badge className="bg-rose-500 text-white h-5 min-w-5 px-1.5 flex items-center justify-center">
+          <Badge className="bg-rose-500 text-white h-5 min-w-5 px-1.5 flex items-center justify-center flex-shrink-0">
             {unreadCount > 9 ? '9+' : unreadCount}
           </Badge>
         ) : (
-          <div className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
             Chat
           </div>
         )}
       </motion.button>
     );
-  };
+  }, [unreadCounts, getInitials, onUserSelect]);
 
   return (
     <Card className="border-0 shadow-sm">
       <div 
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+        style={{ transition: 'background-color 0.15s ease-in-out' }}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-2">
@@ -197,7 +185,8 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
                 <div>
                   <button
                     onClick={() => toggleSection('admins')}
-                    className="flex items-center gap-2 w-full py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="flex items-center gap-2 w-full py-2 hover:bg-gray-50 rounded-lg"
+                    style={{ transition: 'background-color 0.15s ease-in-out' }}
                   >
                     {expandedSections.admins ? (
                       <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -238,7 +227,8 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
                 <div>
                   <button
                     onClick={() => toggleSection('team')}
-                    className="flex items-center gap-2 w-full py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="flex items-center gap-2 w-full py-2 hover:bg-gray-50 rounded-lg"
+                    style={{ transition: 'background-color 0.15s ease-in-out' }}
                   >
                     {expandedSections.team ? (
                       <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -291,4 +281,6 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
       </AnimatePresence>
     </Card>
   );
-}
+};
+
+export default DirectMessagesList;
