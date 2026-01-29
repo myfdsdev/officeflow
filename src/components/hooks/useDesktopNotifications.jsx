@@ -5,12 +5,19 @@ export function useDesktopNotifications(user) {
   useEffect(() => {
     if (!user) return;
 
+    // Check if browser supports notifications
+    if (!('Notification' in window)) {
+      console.log('This browser does not support desktop notifications');
+      return;
+    }
+
     // Request notification permission
     const requestPermission = async () => {
-      if ('Notification' in window) {
-        if (Notification.permission === 'default') {
-          await Notification.requestPermission();
-        }
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        console.log('Notification permission:', permission);
+      } else {
+        console.log('Notification permission status:', Notification.permission);
       }
     };
 
@@ -21,13 +28,25 @@ export function useDesktopNotifications(user) {
       if (event.type === 'create' && event.data?.user_email === user.email) {
         const notification = event.data;
         
+        console.log('New notification received:', notification.title);
+        
         if (Notification.permission === 'granted') {
-          new Notification(notification.title, {
+          const desktopNotif = new Notification(notification.title, {
             body: notification.message,
-            icon: '/logo.png',
-            tag: notification.id,
-            badge: '/badge.png',
+            requireInteraction: false,
+            silent: false,
           });
+
+          // Auto close after 5 seconds
+          setTimeout(() => desktopNotif.close(), 5000);
+
+          // Optional: Handle notification click
+          desktopNotif.onclick = () => {
+            window.focus();
+            desktopNotif.close();
+          };
+        } else {
+          console.log('Notification permission not granted. Current status:', Notification.permission);
         }
       }
     });
