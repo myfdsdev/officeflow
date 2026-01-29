@@ -46,7 +46,9 @@ const statusLabels = {
 };
 
 export default function AttendanceHistory({ attendance, limit }) {
-  const displayData = limit ? attendance.slice(0, limit) : attendance;
+  // Filter out records with no clock_in (no actual session)
+  const filteredData = attendance.filter(record => record.clock_in);
+  const displayData = limit ? filteredData.slice(0, limit) : filteredData;
 
   return (
     <Card className="border-0 shadow-sm">
