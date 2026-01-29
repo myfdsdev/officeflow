@@ -238,13 +238,12 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
       {/* Notes */}
       {project.enabled_columns.includes('notes') && (
         <div>
-          <Textarea
+          <Input
             value={task.notes || ''}
             onChange={(e) => onUpdate({ notes: e.target.value })}
             placeholder="Add notes..."
             disabled={!canEdit}
-            className="h-9 min-h-0 resize-none"
-            rows={1}
+            className="h-9"
           />
         </div>
       )}
