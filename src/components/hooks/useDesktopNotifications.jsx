@@ -31,18 +31,45 @@ export function useDesktopNotifications(user) {
         console.log('New notification received:', notification.title);
         
         if (Notification.permission === 'granted') {
-          const desktopNotif = new Notification(notification.title, {
+          // Create notification options
+          const options = {
             body: notification.message,
+            icon: '/logo.png', // App logo
+            badge: '/badge.png',
             requireInteraction: false,
             silent: false,
-          });
+            tag: notification.id,
+            data: {
+              notificationId: notification.id,
+              relatedId: notification.related_id,
+              type: notification.type
+            }
+          };
 
-          // Auto close after 5 seconds
-          setTimeout(() => desktopNotif.close(), 5000);
+          // Add action buttons for message notifications
+          if (notification.type === 'new_message') {
+            options.actions = [
+              { action: 'reply', title: 'Reply' },
+              { action: 'mark_read', title: 'Mark as Read' }
+            ];
+          }
 
-          // Optional: Handle notification click
+          const desktopNotif = new Notification(notification.title, options);
+
+          // Auto close after 8 seconds
+          setTimeout(() => desktopNotif.close(), 8000);
+
+          // Handle notification click
           desktopNotif.onclick = () => {
             window.focus();
+            
+            // Navigate to relevant page based on notification type
+            if (notification.type === 'new_message') {
+              window.location.href = '/DirectMessages';
+            } else if (notification.type === 'group_added') {
+              window.location.href = '/Groups';
+            }
+            
             desktopNotif.close();
           };
         } else {
