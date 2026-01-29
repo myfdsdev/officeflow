@@ -31,6 +31,8 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
   const [showFilesDialog, setShowFilesDialog] = useState(false);
   const [notesValue, setNotesValue] = useState(task.notes || '');
   const [notesTimeout, setNotesTimeout] = useState(null);
+  const [notesEditMode, setNotesEditMode] = useState(false);
+  const textareaRef = React.useRef(null);
 
   const canEdit = isAdmin || task.owner_id === currentUserId;
 
@@ -83,11 +85,24 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
     if (notesValue !== task.notes) {
       onUpdate({ notes: notesValue });
     }
+    setNotesEditMode(false);
+  };
+
+  const handleNotesClick = (e) => {
+    if (!canEdit) return;
+    e.stopPropagation();
+    setNotesEditMode(true);
   };
 
   React.useEffect(() => {
     setNotesValue(task.notes || '');
   }, [task.notes]);
+
+  React.useEffect(() => {
+    if (notesEditMode && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [notesEditMode]);
 
   return (
     <div 
@@ -265,16 +280,25 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
 
       {/* Notes */}
       {project.enabled_columns.includes('notes') && (
-        <div>
-          <Textarea
-            value={notesValue}
-            onChange={handleNotesChange}
-            onBlur={handleNotesBlur}
-            placeholder="Add notes..."
-            disabled={!canEdit}
-            className="min-h-[36px] max-h-[120px] resize-y"
-            rows={1}
-          />
+        <div
+          onClick={handleNotesClick}
+          className={`${canEdit ? 'cursor-pointer hover:bg-indigo-50' : ''} rounded px-2 py-1 transition-colors`}
+        >
+          {notesEditMode && canEdit ? (
+            <Textarea
+              ref={textareaRef}
+              value={notesValue}
+              onChange={handleNotesChange}
+              onBlur={handleNotesBlur}
+              placeholder="Add notes..."
+              className="min-h-[60px] max-h-[150px] resize-y text-sm"
+              rows={2}
+            />
+          ) : (
+            <div className="text-sm text-gray-700 whitespace-pre-wrap break-words">
+              {notesValue ? notesValue : <span className="text-gray-400 italic">Click to add notes</span>}
+            </div>
+          )}
         </div>
       )}
 
