@@ -26,6 +26,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import NotificationBell from './components/notifications/NotificationBell';
+import NotificationPermissionPrompt from './components/notifications/NotificationPermissionPrompt';
 import { useUserActivity } from './components/hooks/useUserActivity';
 import { useAutoCheckIn } from './components/hooks/useAutoCheckIn';
 import { useDesktopNotifications } from './components/hooks/useDesktopNotifications';
@@ -167,6 +168,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <NotificationPermissionPrompt />
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-100 p-4">
         <div className="flex items-center gap-3 px-4 py-4 mb-6">
