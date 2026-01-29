@@ -240,14 +240,7 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
         <div>
           <Input
             value={task.notes || ''}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              // Debounce update to avoid too many API calls
-              clearTimeout(window.notesTimeout);
-              window.notesTimeout = setTimeout(() => {
-                onUpdate({ notes: newValue });
-              }, 500);
-            }}
+            onChange={(e) => onUpdate({ notes: e.target.value })}
             placeholder="Add notes..."
             disabled={!canEdit}
             className="h-9"
