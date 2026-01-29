@@ -1,289 +1,195 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import DirectMessagesList from '../components/messages/DirectMessagesList';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import ConversationItem from '../components/messages/ConversationItem';
+import ChatInterface from '../components/messages/ChatInterface';
 import BroadcastMessageDialog from '../components/messages/BroadcastMessageDialog';
-import GroupChatList from '../components/groups/GroupChatList';
-import GroupChatInterface from '../components/groups/GroupChatInterface';
-import NotificationBell from '../components/notifications/NotificationBell';
+import NotificationSettings from '../components/messages/NotificationSettings';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send, Megaphone, Pin, Star } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MessageCircle, Megaphone, Settings, Users, User } from "lucide-react";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
-import MessageContextMenu from '../components/messages/MessageContextMenu';
-import RichTextInput from '../components/messages/RichTextInput';
-import ConversationMenu from '../components/messages/ConversationMenu.jsx';
-import UserProfileDialog from '../components/messages/UserProfileDialog';
-import { toast } from 'react-hot-toast';
 
 export default function DirectMessages() {
   const [user, setUser] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [conversationType, setConversationType] = useState(null); // 'dm' or 'group'
   const [showBroadcast, setShowBroadcast] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [starredConversations, setStarredConversations] = useState(() => {
-    const saved = localStorage.getItem('starredConversations');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
-  const messagesEndRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('all');
   const queryClient = useQueryClient();
 
-  // Toggle star conversation
-  const toggleStar = (userId) => {
-    setStarredConversations(prev => {
-      const newStarred = prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId];
-      localStorage.setItem('starredConversations', JSON.stringify(newStarred));
-      return newStarred;
-    });
-    toast.success(starredConversations.includes(userId) ? 'Unstarred conversation' : 'Starred conversation');
-  };
+  // Check URL parameters for direct navigation
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get('userId');
+    const groupId = params.get('groupId');
+    
+    if (userId) {
+      // TODO: Load user and set as selected
+    } else if (groupId) {
+      // TODO: Load group and set as selected
+    }
+  }, []);
 
   useEffect(() => {
-    const initUser = async () => {
-      const userData = await base44.auth.me();
-      setUser(userData);
-      
-      // Mark ALL message notifications as read when DirectMessages page opens
-      if (userData) {
-        try {
-          const notifications = await base44.entities.Notification.filter({
-            user_email: userData.email,
-            is_read: false,
-            type: 'new_message'
-          });
-          
-          // Mark all message notifications as read immediately
-          const updatePromises = notifications.map(notif => 
-            base44.entities.Notification.update(notif.id, { is_read: true })
-          );
-          await Promise.all(updatePromises);
-          
-          // Invalidate notifications query to update bell icon
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        } catch (error) {
-          console.error('Failed to mark notifications as read:', error);
-        }
-      }
-    };
-    
-    initUser();
-  }, [queryClient]);
+    base44.auth.me().then(setUser);
+  }, []);
 
-  // Fetch messages for the selected conversation
-  const { data: allConversationMessages = [], isLoading: loadingMessages, error: messagesError, refetch } = useQuery({
-    queryKey: ['messages', user?.id, selectedUser?.id],
+  // Get user settings for mute info
+  const { data: userSettings } = useQuery({
+    queryKey: ['userSettings', user?.id],
     queryFn: async () => {
-      if (!user || !selectedUser) return [];
+      if (!user) return null;
+      const settings = await base44.entities.UserSettings.filter({ user_id: user.id });
+      return settings && settings.length > 0 ? settings[0] : null;
+    },
+    enabled: !!user
+  });
+
+  // Fetch all users for DM conversations
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: !!user
+  });
+
+  // Fetch DM conversations with last message and unread count
+  const { data: dmConversations = [] } = useQuery({
+    queryKey: ['dmConversations', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       
-      try {
-        const allMessages = await base44.entities.Message.list('-created_date', 1000);
+      const messages = await base44.entities.Message.list('-created_date', 500);
+      const onlineStatuses = await base44.entities.OnlineStatus.list();
+      
+      // Create map of user conversations
+      const conversationsMap = new Map();
+      
+      messages.forEach(msg => {
+        const otherUserId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
         
-        const conversationMessages = allMessages.filter(m => 
-          (m.sender_id === user.id && m.receiver_id === selectedUser.id) ||
-          (m.sender_id === selectedUser.id && m.receiver_id === user.id)
-        );
-        
-        return conversationMessages.sort((a, b) => 
-          new Date(a.created_date) - new Date(b.created_date)
-        );
-      } catch (error) {
-        console.error('Failed to fetch messages:', error);
-        return [];
-      }
-    },
-    enabled: !!user && !!selectedUser,
-  });
-
-  // Filter messages based on search
-  const messages = searchQuery
-    ? allConversationMessages.filter(msg => 
-        msg.message_text.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : allConversationMessages;
-
-  // Real-time message subscription
-  useEffect(() => {
-    if (!user) return;
-
-    const unsubscribe = base44.entities.Message.subscribe((event) => {
-      if (event.type === 'create') {
-        const msg = event.data;
-        if (msg.sender_id === user.id || msg.receiver_id === user.id) {
-          queryClient.invalidateQueries({ queryKey: ['messages'] });
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        if (!conversationsMap.has(otherUserId)) {
+          const otherUser = allUsers.find(u => u.id === otherUserId);
+          if (!otherUser) return;
           
-          // Mark as read if from selected user
-          if (msg.receiver_id === user.id && msg.sender_id === selectedUser?.id && !msg.is_read) {
-            base44.entities.Message.update(msg.id, { is_read: true }).catch(console.error);
-          }
+          const onlineStatus = onlineStatuses.find(s => s.user_id === otherUserId);
+          
+          conversationsMap.set(otherUserId, {
+            type: 'dm',
+            id: otherUserId,
+            other_user_id: otherUserId,
+            name: msg.sender_id === user.id ? msg.receiver_name : msg.sender_name,
+            email: msg.sender_id === user.id ? msg.receiver_email : msg.sender_email,
+            profile_photo: otherUser.profile_photo,
+            last_message: msg.message_text,
+            last_message_time: msg.created_date,
+            is_online: onlineStatus?.is_online || false,
+            last_seen: onlineStatus?.last_seen,
+            unread_count: 0
+          });
         }
-      }
-    });
-
-    return unsubscribe;
-  }, [user, selectedUser, queryClient]);
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const sendMessageMutation = useMutation({
-    mutationFn: async (text) => {
-      const newMessage = await base44.entities.Message.create({
-        sender_id: user.id,
-        sender_email: user.email,
-        sender_name: user.full_name,
-        receiver_id: selectedUser.id,
-        receiver_email: selectedUser.email,
-        receiver_name: selectedUser.full_name,
-        message_text: text,
-        is_read: false,
-        is_edited: false,
-        is_pinned: false,
-        is_deleted: false,
-        muted_by: [],
       });
-
-      // Only create notification for receiver if not muted
-      // Notification will be automatically marked as read if they're on DirectMessages page
-      await base44.entities.Notification.create({
-        user_email: selectedUser.email,
-        title: 'New Message',
-        message: `${user.full_name}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`,
-        type: 'new_message',
-        is_read: false,
-        related_id: newMessage.id,
+      
+      // Count unread messages
+      const unreadMessages = messages.filter(m => m.receiver_id === user.id && !m.is_read);
+      unreadMessages.forEach(msg => {
+        const conv = conversationsMap.get(msg.sender_id);
+        if (conv) conv.unread_count++;
       });
-
-      return newMessage;
+      
+      return Array.from(conversationsMap.values())
+        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages'] });
-    },
+    enabled: !!user && allUsers.length > 0,
+    refetchInterval: 3000
   });
 
-  // Message Actions
-  const handleEditMessage = async (messageId, newText) => {
-    await base44.entities.Message.update(messageId, {
-      message_text: newText,
-      is_edited: true,
-    });
-    queryClient.invalidateQueries({ queryKey: ['messages'] });
-  };
+  // Fetch group conversations
+  const { data: groupConversations = [] } = useQuery({
+    queryKey: ['groupConversations', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const memberships = await base44.entities.GroupMember.filter({ user_id: user.id });
+      const groupIds = memberships.map(m => m.group_id);
+      
+      const conversations = [];
+      
+      for (const groupId of groupIds) {
+        const group = await base44.entities.Group.filter({ id: groupId });
+        if (!group || group.length === 0) continue;
+        
+        const messages = await base44.entities.GroupMessage.filter(
+          { group_id: groupId },
+          '-created_date',
+          1
+        );
+        
+        const memberCount = await base44.entities.GroupMember.filter({ group_id: groupId });
+        
+        conversations.push({
+          type: 'group',
+          id: groupId,
+          name: group[0].group_name,
+          description: group[0].description,
+          last_message: messages[0]?.message_text || 'No messages yet',
+          last_message_time: messages[0]?.created_date,
+          member_count: memberCount.length,
+          unread_count: 0 // TODO: Implement group unread count
+        });
+      }
+      
+      return conversations.sort((a, b) => 
+        new Date(b.last_message_time || 0) - new Date(a.last_message_time || 0)
+      );
+    },
+    enabled: !!user,
+    refetchInterval: 3000
+  });
 
-  const handleMarkUnread = async (messageId) => {
-    await base44.entities.Message.update(messageId, {
-      is_read: false,
-    });
-    queryClient.invalidateQueries({ queryKey: ['messages'] });
-  };
+  // Combined conversations
+  const allConversations = [...dmConversations, ...groupConversations];
+  const filteredConversations = searchQuery
+    ? allConversations.filter(c => 
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.last_message?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allConversations;
 
-  const handleSetReminder = async (messageId, reminderTime, messageText) => {
-    await base44.entities.MessageReminder.create({
-      user_id: user.id,
-      message_id: messageId,
-      message_text: messageText,
-      reminder_time: reminderTime.toISOString(),
-      is_triggered: false,
-    });
-  };
+  const tabConversations = activeTab === 'all' 
+    ? filteredConversations
+    : activeTab === 'dms'
+      ? filteredConversations.filter(c => c.type === 'dm')
+      : filteredConversations.filter(c => c.type === 'group');
 
-  const handleToggleMute = async (messageId) => {
-    const msg = messages.find(m => m.id === messageId);
-    const mutedBy = msg.muted_by || [];
-    const isMuted = mutedBy.includes(user.id);
+  // Handle mute toggle
+  const handleMuteToggle = async () => {
+    if (!selectedConversation || !user || !userSettings) return;
     
-    await base44.entities.Message.update(messageId, {
-      muted_by: isMuted 
-        ? mutedBy.filter(id => id !== user.id)
-        : [...mutedBy, user.id]
-    });
-    queryClient.invalidateQueries({ queryKey: ['messages'] });
-  };
-
-  const handleCopyLink = async (messageId) => {
-    const link = `${window.location.origin}${window.location.pathname}?messageId=${messageId}`;
-    return link;
-  };
-
-  const handlePinMessage = async (messageId, pin) => {
-    await base44.entities.Message.update(messageId, {
-      is_pinned: pin,
-    });
-    queryClient.invalidateQueries({ queryKey: ['messages'] });
-  };
-
-  const handleDeleteMessage = async (messageId, deleteForEveryone) => {
-    if (deleteForEveryone) {
-      await base44.entities.Message.update(messageId, {
-        is_deleted: true,
-        deleted_for_everyone: true,
-        deleted_by: user.id,
-        message_text: 'This message was deleted',
+    const mutedConvos = userSettings.muted_conversations || [];
+    const isMuted = mutedConvos.includes(selectedConversation.id);
+    
+    const newMuted = isMuted
+      ? mutedConvos.filter(id => id !== selectedConversation.id)
+      : [...mutedConvos, selectedConversation.id];
+    
+    if (userSettings.id) {
+      await base44.entities.UserSettings.update(userSettings.id, {
+        muted_conversations: newMuted
       });
     } else {
-      await base44.entities.Message.update(messageId, {
-        is_deleted: true,
-        deleted_for_everyone: false,
-        deleted_by: user.id,
+      await base44.entities.UserSettings.create({
+        user_id: user.id,
+        user_email: user.email,
+        muted_conversations: newMuted
       });
     }
-    queryClient.invalidateQueries({ queryKey: ['messages'] });
-  };
-
-  // Mark messages as read when conversation opened
-  useEffect(() => {
-    const markAsRead = async () => {
-      if (!user || !selectedUser || !messages || messages.length === 0) return;
-
-      try {
-        const unreadMessages = messages.filter(m => 
-          m.receiver_id === user.id && 
-          m.sender_id === selectedUser.id && 
-          !m.is_read
-        );
-
-        // Mark messages as read
-        const updatePromises = unreadMessages.map(msg =>
-          base44.entities.Message.update(msg.id, { is_read: true })
-        );
-        await Promise.all(updatePromises);
-
-        // Also mark related message notifications as read
-        const messageNotifications = await base44.entities.Notification.filter({
-          user_email: user.email,
-          type: 'new_message',
-          is_read: false,
-        });
-
-        const notifUpdatePromises = messageNotifications
-          .filter(notif => notif.message.includes(selectedUser.full_name))
-          .map(notif => base44.entities.Notification.update(notif.id, { is_read: true }));
-        
-        await Promise.all(notifUpdatePromises);
-        
-        // Update notification count
-        queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      } catch (error) {
-        console.error('Failed to mark messages as read:', error);
-      }
-    };
-
-    markAsRead();
-  }, [user, selectedUser, messages, queryClient]);
-
-  const handleSendMessage = (text) => {
-    if (text && !sendMessageMutation.isPending) {
-      sendMessageMutation.mutate(text);
-    }
+    
+    queryClient.invalidateQueries(['userSettings', user.id]);
   };
 
   if (!user) {
