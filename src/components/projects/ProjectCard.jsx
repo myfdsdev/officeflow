@@ -16,8 +16,26 @@ export default function ProjectCard({ project, onOpen }) {
     queryFn: () => base44.entities.ProjectMember.filter({ project_id: project.id }),
   });
 
+  // Calculate progress based on task status weights
+  const calculateProgress = () => {
+    if (tasks.length === 0) return 0;
+    
+    const statusWeights = {
+      not_started: 0,
+      working_on_it: 50,
+      done: 100,
+      stuck: 25,
+    };
+    
+    const totalProgress = tasks.reduce((sum, task) => {
+      return sum + (statusWeights[task.status] || 0);
+    }, 0);
+    
+    return Math.round(totalProgress / tasks.length);
+  };
+
+  const progress = calculateProgress();
   const completedTasks = tasks.filter(t => t.status === 'done').length;
-  const progress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
 
   return (
     <Card 

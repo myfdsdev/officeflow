@@ -84,6 +84,26 @@ export default function ProjectBoardPage() {
   const isMember = members.some(m => m.user_id === user.id);
   const hasAccess = isAdmin || isMember;
 
+  // Calculate progress based on task status
+  const calculateProgress = () => {
+    if (tasks.length === 0) return 0;
+    
+    const statusWeights = {
+      not_started: 0,
+      working_on_it: 50,
+      done: 100,
+      stuck: 25,
+    };
+    
+    const totalProgress = tasks.reduce((sum, task) => {
+      return sum + (statusWeights[task.status] || 0);
+    }, 0);
+    
+    return Math.round(totalProgress / tasks.length);
+  };
+
+  const projectProgress = calculateProgress();
+
   if (!hasAccess) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -109,14 +129,28 @@ export default function ProjectBoardPage() {
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
               </Link>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1">
                 <div 
                   className="w-8 h-8 rounded-lg" 
                   style={{ backgroundColor: project.color }}
                 />
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{project.project_name}</h1>
-                  <p className="text-sm text-gray-600">{project.description}</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-4">
+                    <h1 className="text-2xl font-bold text-gray-900">{project.project_name}</h1>
+                    <div className="flex items-center gap-3">
+                      <div className="w-48 bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="h-2.5 rounded-full transition-all duration-300"
+                          style={{ 
+                            width: `${projectProgress}%`,
+                            backgroundColor: project.color 
+                          }}
+                        />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700">{projectProgress}%</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">{project.description}</p>
                 </div>
               </div>
             </div>
