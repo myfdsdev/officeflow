@@ -29,6 +29,8 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
   const [editedName, setEditedName] = useState(task.task_name);
   const [uploading, setUploading] = useState(false);
   const [showFilesDialog, setShowFilesDialog] = useState(false);
+  const [notesValue, setNotesValue] = useState(task.notes || '');
+  const [notesTimeout, setNotesTimeout] = useState(null);
 
   const canEdit = isAdmin || task.owner_id === currentUserId;
 
@@ -60,6 +62,32 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
     const updatedFiles = currentFiles.filter((_, index) => index !== fileIndex);
     onUpdate({ files: updatedFiles });
   };
+
+  const handleNotesChange = (e) => {
+    const newValue = e.target.value;
+    setNotesValue(newValue);
+    
+    if (notesTimeout) clearTimeout(notesTimeout);
+    
+    const timeout = setTimeout(() => {
+      if (newValue !== task.notes) {
+        onUpdate({ notes: newValue });
+      }
+    }, 1000);
+    
+    setNotesTimeout(timeout);
+  };
+
+  const handleNotesBlur = () => {
+    if (notesTimeout) clearTimeout(notesTimeout);
+    if (notesValue !== task.notes) {
+      onUpdate({ notes: notesValue });
+    }
+  };
+
+  React.useEffect(() => {
+    setNotesValue(task.notes || '');
+  }, [task.notes]);
 
   return (
     <div 
@@ -238,12 +266,14 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
       {/* Notes */}
       {project.enabled_columns.includes('notes') && (
         <div>
-          <Input
-            value={task.notes || ''}
-            onChange={(e) => onUpdate({ notes: e.target.value })}
+          <Textarea
+            value={notesValue}
+            onChange={handleNotesChange}
+            onBlur={handleNotesBlur}
             placeholder="Add notes..."
             disabled={!canEdit}
-            className="h-9"
+            className="min-h-[36px] max-h-[120px] resize-y"
+            rows={1}
           />
         </div>
       )}
