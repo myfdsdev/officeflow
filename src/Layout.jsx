@@ -29,6 +29,7 @@ import NotificationBell from './components/notifications/NotificationBell';
 import { useUserActivity } from './components/hooks/useUserActivity';
 import { useAutoCheckIn } from './components/hooks/useAutoCheckIn';
 import { useDesktopNotifications } from './components/hooks/useDesktopNotifications';
+import { useMessageDesktopNotifications } from './components/hooks/useMessageDesktopNotifications';
 import OnlineStatusIndicator from './components/admin/OnlineStatusIndicator';
 
 const employeeNavItems = [
@@ -68,6 +69,9 @@ export default function Layout({ children, currentPageName }) {
 
   // Enable desktop notifications
   useDesktopNotifications(user);
+
+  // Enable message desktop notifications
+  useMessageDesktopNotifications(user);
 
   const getInitials = (name) => {
     if (!name) return "?";
