@@ -6,20 +6,14 @@ import { motion } from "framer-motion";
 import { Clock, Calendar } from "lucide-react";
 
 // Calculate total hours worked in a day
-const calculateTotalHours = (clockIn, clockOut) => {
-  if (!clockIn || !clockOut) return null;
+const calculateTotalHours = (firstCheckIn, lastCheckOut) => {
+  if (!firstCheckIn || !lastCheckOut) return null;
   
   try {
-    const [inHours, inMinutes] = clockIn.split(':').map(Number);
-    const [outHours, outMinutes] = clockOut.split(':').map(Number);
+    const checkIn = new Date(firstCheckIn);
+    const checkOut = new Date(lastCheckOut);
     
-    const inDate = new Date();
-    inDate.setHours(inHours, inMinutes, 0);
-    
-    const outDate = new Date();
-    outDate.setHours(outHours, outMinutes, 0);
-    
-    const totalMinutes = differenceInMinutes(outDate, inDate);
+    const totalMinutes = differenceInMinutes(checkOut, checkIn);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     
@@ -46,8 +40,8 @@ const statusLabels = {
 };
 
 export default function AttendanceHistory({ attendance, limit }) {
-  // Filter out records with no clock_in (no actual session)
-  const filteredData = attendance.filter(record => record.clock_in);
+  // Filter out records with no first_check_in (no actual session)
+  const filteredData = attendance.filter(record => record.first_check_in);
   const displayData = limit ? filteredData.slice(0, limit) : filteredData;
 
   return (
@@ -64,7 +58,7 @@ export default function AttendanceHistory({ attendance, limit }) {
             <p className="text-gray-400 text-center py-8">No attendance records yet</p>
           ) : (
             displayData.map((record, index) => {
-              const timeWorked = calculateTotalHours(record.clock_in, record.clock_out);
+              const timeWorked = calculateTotalHours(record.first_check_in, record.last_check_out);
               
               return (
                 <motion.div
@@ -89,7 +83,7 @@ export default function AttendanceHistory({ attendance, limit }) {
                           {format(parseISO(record.date), "EEEE")}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {record.clock_in ? '1 session today' : 'No session'}
+                          {record.first_check_in ? '1 session today' : 'No session'}
                         </p>
                       </div>
                     </div>
@@ -109,12 +103,12 @@ export default function AttendanceHistory({ attendance, limit }) {
                     </div>
                   </div>
 
-                  {record.clock_in && (
+                  {record.first_check_in && (
                     <div className="flex items-center gap-2 text-sm bg-white rounded-lg p-3 border border-gray-200">
                       <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium text-gray-700">{record.clock_in}</span>
+                      <span className="font-medium text-gray-700">{format(new Date(record.first_check_in), 'HH:mm')}</span>
                       <span className="text-gray-400">→</span>
-                      <span className="font-medium text-gray-700">{record.clock_out || "Working..."}</span>
+                      <span className="font-medium text-gray-700">{record.last_check_out ? format(new Date(record.last_check_out), 'HH:mm') : "Working..."}</span>
                       {timeWorked && (
                         <span className="ml-auto text-xs text-indigo-600 font-medium">
                           {timeWorked.totalMinutes} minutes

@@ -38,7 +38,7 @@ export default function AttendanceHistoryPage() {
     : attendance.filter(a => a.status === statusFilter);
 
   const presentDays = attendance.filter(a => a.status === 'present').length;
-  const totalHours = attendance.reduce((sum, a) => sum + (a.work_hours || 0), 0);
+  const totalHours = attendance.reduce((sum, a) => sum + (a.total_work_hours || 0), 0);
   const avgHours = presentDays > 0 ? (totalHours / presentDays).toFixed(1) : '0';
 
   const generateMonthOptions = () => {

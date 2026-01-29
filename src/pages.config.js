@@ -51,18 +51,18 @@ import AccessDenied from './pages/AccessDenied';
 import AdminDashboard from './pages/AdminDashboard';
 import AttendanceHistory from './pages/AttendanceHistory';
 import AttendanceReports from './pages/AttendanceReports';
+import Checkout from './pages/Checkout';
 import CompleteProfile from './pages/CompleteProfile';
 import Dashboard from './pages/Dashboard';
+import DirectMessages from './pages/DirectMessages';
 import EmployeeDetails from './pages/EmployeeDetails';
 import Groups from './pages/Groups';
 import LeaveRequests from './pages/LeaveRequests';
 import MyProfile from './pages/MyProfile';
+import Pricing from './pages/Pricing';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Settings from './pages/Settings';
 import Welcome from './pages/Welcome';
-import DirectMessages from './pages/DirectMessages';
-import Pricing from './pages/Pricing';
-import Checkout from './pages/Checkout';
 import __Layout from './Layout.jsx';
 
 
@@ -71,18 +71,18 @@ export const PAGES = {
     "AdminDashboard": AdminDashboard,
     "AttendanceHistory": AttendanceHistory,
     "AttendanceReports": AttendanceReports,
+    "Checkout": Checkout,
     "CompleteProfile": CompleteProfile,
     "Dashboard": Dashboard,
+    "DirectMessages": DirectMessages,
     "EmployeeDetails": EmployeeDetails,
     "Groups": Groups,
     "LeaveRequests": LeaveRequests,
     "MyProfile": MyProfile,
+    "Pricing": Pricing,
     "PrivacyPolicy": PrivacyPolicy,
     "Settings": Settings,
     "Welcome": Welcome,
-    "DirectMessages": DirectMessages,
-    "Pricing": Pricing,
-    "Checkout": Checkout,
 }
 
 export const pagesConfig = {

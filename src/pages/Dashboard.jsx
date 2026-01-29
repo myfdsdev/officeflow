@@ -23,19 +23,21 @@ import LeaveRequestList from '../components/leave/LeaveRequestList';
 import NotificationBell from '../components/notifications/NotificationBell';
 
 // Live Timer Component
-function LiveTimer({ clockIn, clockOut }) {
+function LiveTimer({ firstCheckIn, lastCheckOut }) {
   const [elapsed, setElapsed] = useState('00:00:00');
 
   useEffect(() => {
-    if (!clockIn || clockOut) {
+    if (!firstCheckIn || lastCheckOut) {
       // If not clocked in or already clocked out, show static time
-      if (clockOut && clockIn) {
-        const [inH, inM] = clockIn.split(':').map(Number);
-        const [outH, outM] = clockOut.split(':').map(Number);
-        const totalMinutes = (outH * 60 + outM) - (inH * 60 + inM);
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        const seconds = 0;
+      if (lastCheckOut && firstCheckIn) {
+        const checkIn = new Date(firstCheckIn);
+        const checkOut = new Date(lastCheckOut);
+        const diffMs = checkOut - checkIn;
+        const diffSeconds = Math.floor(diffMs / 1000);
+        
+        const hours = Math.floor(diffSeconds / 3600);
+        const minutes = Math.floor((diffSeconds % 3600) / 60);
+        const seconds = diffSeconds % 60;
         setElapsed(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
       } else {
         setElapsed('00:00:00');
@@ -46,12 +48,9 @@ function LiveTimer({ clockIn, clockOut }) {
     // Calculate and update elapsed time every second
     const updateTimer = () => {
       const now = new Date();
-      const [clockInHours, clockInMinutes] = clockIn.split(':').map(Number);
+      const checkIn = new Date(firstCheckIn);
       
-      const clockInDate = new Date();
-      clockInDate.setHours(clockInHours, clockInMinutes, 0, 0);
-      
-      const diffMs = now - clockInDate;
+      const diffMs = now - checkIn;
       const diffSeconds = Math.floor(diffMs / 1000);
       
       const hours = Math.floor(diffSeconds / 3600);
@@ -65,7 +64,7 @@ function LiveTimer({ clockIn, clockOut }) {
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [clockIn, clockOut]);
+  }, [firstCheckIn, lastCheckOut]);
 
   return (
     <div className="text-5xl font-bold text-gray-900 font-mono">
@@ -148,8 +147,9 @@ export default function Dashboard() {
         employee_email: user.email,
         employee_name: user.full_name,
         date: today,
-        clock_in: clockInTime,
+        first_check_in: new Date().toISOString(),
         status: status,
+        has_active_session: true,
       });
 
       // Send success notification to employee
@@ -199,12 +199,9 @@ export default function Dashboard() {
 
   const clockOutMutation = useMutation({
     mutationFn: async () => {
-      const clockInTime = todayAttendance.clock_in.split(':');
-      const clockOutTimeStr = format(new Date(), 'HH:mm');
-      const clockOutTime = clockOutTimeStr.split(':');
-      const clockInMinutes = parseInt(clockInTime[0]) * 60 + parseInt(clockInTime[1]);
-      const clockOutMinutes = parseInt(clockOutTime[0]) * 60 + parseInt(clockOutTime[1]);
-      const workHours = Math.max(0, (clockOutMinutes - clockInMinutes) / 60);
+      const now = new Date();
+      const checkIn = new Date(todayAttendance.first_check_in);
+      const workHours = (now - checkIn) / (1000 * 60 * 60);
       
       // Determine final status based on work hours
       // If less than 4 hours → Half Day
@@ -214,12 +211,14 @@ export default function Dashboard() {
       }
       
       const updated = await base44.entities.Attendance.update(todayAttendance.id, {
-        clock_out: clockOutTimeStr,
-        work_hours: workHours,
+        last_check_out: now.toISOString(),
+        total_work_hours: workHours,
         status: finalStatus,
+        has_active_session: false,
       });
 
       // Send success notification to employee
+      const clockOutTimeStr = format(now, 'HH:mm');
       await base44.entities.Notification.create({
         user_email: user.email,
         title: 'Check-out Successful',
@@ -258,7 +257,7 @@ export default function Dashboard() {
   );
   const presentDays = thisMonthAttendance.filter(a => a.status === 'present').length;
   const lateDays = thisMonthAttendance.filter(a => a.status === 'late').length;
-  const totalHours = thisMonthAttendance.reduce((sum, a) => sum + (a.work_hours || 0), 0);
+  const totalHours = thisMonthAttendance.reduce((sum, a) => sum + (a.total_work_hours || 0), 0);
   const pendingLeaves = myLeaves.filter(l => l.status === 'pending').length;
   const totalWorkingDays = thisMonthAttendance.length;
   const attendancePercentage = totalWorkingDays > 0 
@@ -327,10 +326,10 @@ export default function Dashboard() {
               {/* Left Side - Check In/Out Button */}
               <div className="flex flex-col items-center">
                 <p className="text-gray-400 text-sm uppercase tracking-wide mb-6">
-                  {!todayAttendance?.clock_in ? 'Ready to Start?' : todayAttendance?.clock_out ? 'Great Job Today!' : 'Currently Working'}
+                  {!todayAttendance?.first_check_in ? 'Ready to Start?' : todayAttendance?.last_check_out ? 'Great Job Today!' : 'Currently Working'}
                 </p>
                 
-                {!todayAttendance?.clock_in && (
+                {!todayAttendance?.first_check_in && (
                   <button
                     onClick={() => clockInMutation.mutate()}
                     disabled={clockInMutation.isPending}
@@ -343,7 +342,7 @@ export default function Dashboard() {
                   </button>
                 )}
 
-                {todayAttendance?.clock_in && !todayAttendance?.clock_out && (
+                {todayAttendance?.first_check_in && !todayAttendance?.last_check_out && (
                   <button
                     onClick={() => setShowCheckoutConfirm(true)}
                     disabled={clockOutMutation.isPending}
@@ -356,7 +355,7 @@ export default function Dashboard() {
                   </button>
                 )}
 
-                {todayAttendance?.clock_out && (
+                {todayAttendance?.last_check_out && (
                   <div className="relative w-64 h-64 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-2xl">
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <CheckCircle2 className="w-12 h-12 text-white mb-3" />
@@ -368,8 +367,8 @@ export default function Dashboard() {
                 <div className="mt-8 text-center">
                   <p className="text-gray-400 text-sm mb-2">Time Elapsed</p>
                   <LiveTimer 
-                    clockIn={todayAttendance?.clock_in}
-                    clockOut={todayAttendance?.clock_out}
+                    firstCheckIn={todayAttendance?.first_check_in}
+                    lastCheckOut={todayAttendance?.last_check_out}
                   />
                 </div>
               </div>
@@ -384,13 +383,13 @@ export default function Dashboard() {
                     <span className="text-gray-600 font-medium">Today's Hours</span>
                   </div>
                   <p className="text-4xl font-bold text-gray-900">
-                    {todayAttendance?.work_hours 
-                      ? `${Math.floor(todayAttendance.work_hours)}h ${Math.round((todayAttendance.work_hours % 1) * 60)}m`
+                    {todayAttendance?.total_work_hours 
+                      ? `${Math.floor(todayAttendance.total_work_hours)}h ${Math.round((todayAttendance.total_work_hours % 1) * 60)}m`
                       : '0h 0m'
                     }
                   </p>
                   <p className="text-sm text-gray-400 mt-1">
-                    {todayAttendance?.clock_in || '00:00:00'}
+                    {todayAttendance?.first_check_in ? format(new Date(todayAttendance.first_check_in), 'HH:mm') : '00:00:00'}
                   </p>
                 </Card>
 
@@ -403,12 +402,12 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className={`w-3 h-3 rounded-full ${
-                      todayAttendance?.clock_in && !todayAttendance?.clock_out 
+                      todayAttendance?.first_check_in && !todayAttendance?.last_check_out 
                         ? 'bg-green-500' 
                         : 'bg-gray-300'
                     }`} />
                     <span className="text-2xl font-bold text-gray-900">
-                      {todayAttendance?.clock_in && !todayAttendance?.clock_out 
+                      {todayAttendance?.first_check_in && !todayAttendance?.last_check_out 
                         ? 'Online' 
                         : 'Offline'
                       }
@@ -416,17 +415,17 @@ export default function Dashboard() {
                   </div>
                 </Card>
 
-                {todayAttendance?.clock_in && (
+                {todayAttendance?.first_check_in && (
                   <Card className="p-6 border border-gray-200 shadow-sm bg-indigo-50">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <LogIn className="w-4 h-4" />
-                        <span>Check In: {todayAttendance.clock_in}</span>
+                        <span>Check In: {format(new Date(todayAttendance.first_check_in), 'HH:mm')}</span>
                       </div>
-                      {todayAttendance.clock_out && (
+                      {todayAttendance.last_check_out && (
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <LogOut className="w-4 h-4" />
-                          <span>Check Out: {todayAttendance.clock_out}</span>
+                          <span>Check Out: {format(new Date(todayAttendance.last_check_out), 'HH:mm')}</span>
                         </div>
                       )}
                     </div>
