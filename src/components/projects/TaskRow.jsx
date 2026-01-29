@@ -8,6 +8,7 @@ import { Trash2, FileText, Calendar, Upload } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { base44 } from '@/api/base44Client';
+import FilesDialog from './FilesDialog';
 
 const statusConfig = {
   not_started: { label: 'Not Started', color: 'bg-gray-100 text-gray-800' },
@@ -27,6 +28,7 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(task.task_name);
   const [uploading, setUploading] = useState(false);
+  const [showFilesDialog, setShowFilesDialog] = useState(false);
 
   const canEdit = isAdmin || task.owner_id === currentUserId;
 
@@ -51,6 +53,12 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleRemoveFile = (fileIndex) => {
+    const currentFiles = task.files || [];
+    const updatedFiles = currentFiles.filter((_, index) => index !== fileIndex);
+    onUpdate({ files: updatedFiles });
   };
 
   return (
@@ -199,21 +207,31 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
 
       {/* Files */}
       {project.enabled_columns.includes('files') && (
-        <div>
-          <label className="cursor-pointer">
-            <Button variant="outline" size="sm" asChild disabled={!canEdit || uploading}>
-              <span>
-                <Upload className="w-4 h-4 mr-1" />
-                {task.files?.length || 0}
-              </span>
-            </Button>
-            <input
-              type="file"
-              className="hidden"
-              onChange={handleFileUpload}
-              disabled={!canEdit || uploading}
-            />
-          </label>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowFilesDialog(true)}
+            disabled={!task.files || task.files.length === 0}
+          >
+            <FileText className="w-4 h-4 mr-1" />
+            {task.files?.length || 0}
+          </Button>
+          {canEdit && (
+            <label className="cursor-pointer">
+              <Button variant="ghost" size="icon" asChild disabled={uploading}>
+                <span>
+                  <Upload className="w-4 h-4" />
+                </span>
+              </Button>
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleFileUpload}
+                disabled={uploading}
+              />
+            </label>
+          )}
         </div>
       )}
 
@@ -239,6 +257,16 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
           </Button>
         )}
       </div>
+
+      {/* Files Dialog */}
+      <FilesDialog
+        open={showFilesDialog}
+        onClose={() => setShowFilesDialog(false)}
+        files={task.files}
+        taskName={task.task_name}
+        canEdit={canEdit}
+        onRemoveFile={handleRemoveFile}
+      />
     </div>
   );
 }
