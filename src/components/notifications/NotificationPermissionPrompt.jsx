@@ -56,9 +56,9 @@ export default function NotificationPermissionPrompt() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="fixed top-4 right-4 z-50 max-w-md"
+          className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] max-w-md w-full mx-4"
         >
-          <Card className="shadow-lg border-indigo-200">
+          <Card className="shadow-2xl border-2 border-indigo-400 bg-white">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -84,19 +84,23 @@ export default function NotificationPermissionPrompt() {
             </CardHeader>
             <CardContent className="space-y-3">
               {permission === 'denied' && (
-                <div className="bg-rose-50 border border-rose-200 rounded-lg p-3">
-                  <div className="flex items-start gap-2">
-                    <BellOff className="w-5 h-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-rose-700">
-                      <p className="font-medium mb-1">Notifications Blocked</p>
-                      <p className="text-xs">
-                        Please enable notifications in your browser settings:
+                <div className="bg-rose-50 border-2 border-rose-300 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <BellOff className="w-6 h-6 text-rose-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-rose-800">
+                      <p className="font-bold mb-2 text-base">🚫 Notifications Blocked kar diye hain</p>
+                      <p className="text-sm font-medium mb-2">
+                        Aapne pehle notifications ko block kar diya tha. Ab manually enable karna hoga:
                       </p>
-                      <ol className="text-xs mt-2 space-y-1 list-decimal list-inside">
-                        <li>Click the lock icon in your browser's address bar</li>
-                        <li>Find "Notifications" and change to "Allow"</li>
-                        <li>Refresh this page</li>
+                      <ol className="text-sm mt-3 space-y-2 list-decimal list-inside bg-white p-3 rounded border border-rose-200">
+                        <li className="font-medium">Address bar mein <span className="bg-rose-100 px-1 rounded">🔒 Lock icon</span> par click karein</li>
+                        <li className="font-medium">"Notifications" ya "Site Settings" dhundein</li>
+                        <li className="font-medium">"Allow" ya "Allowed" select karein</li>
+                        <li className="font-medium">Page ko refresh karein (F5 press karein)</li>
                       </ol>
+                      <p className="text-xs mt-3 text-rose-600 font-medium">
+                        ⚠️ Bina browser settings change kiye notifications nahi chalegi
+                      </p>
                     </div>
                   </div>
                 </div>
