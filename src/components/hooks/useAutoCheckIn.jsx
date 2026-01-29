@@ -54,7 +54,7 @@ export function useAutoCheckIn(user) {
             employee_name: user.full_name,
             date: today,
             first_check_in: checkInTime,
-            status: 'absent',
+            status: 'present',
             total_work_hours: 0,
             has_active_session: true,
             location: 'Auto Check-In'
