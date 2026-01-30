@@ -52,17 +52,31 @@ export default function Settings() {
   }, []);
 
   const handleSave = async () => {
-    if (!company) return;
-
     setSaving(true);
     try {
-      await base44.entities.Company.update(company.id, {
-        office_start_time: settings.office_start_time,
-        office_end_time: settings.office_end_time,
-        late_threshold_minutes: settings.late_threshold_minutes,
-        half_day_hours: settings.half_day_hours,
-        working_days: settings.working_days,
-      });
+      if (company) {
+        // Update existing company
+        await base44.entities.Company.update(company.id, {
+          office_start_time: settings.office_start_time,
+          office_end_time: settings.office_end_time,
+          late_threshold_minutes: settings.late_threshold_minutes,
+          half_day_hours: settings.half_day_hours,
+          working_days: settings.working_days,
+        });
+      } else if (user) {
+        // Create new company if doesn't exist
+        const newCompany = await base44.entities.Company.create({
+          company_name: user.full_name + "'s Company",
+          owner_id: user.id,
+          owner_email: user.email,
+          office_start_time: settings.office_start_time,
+          office_end_time: settings.office_end_time,
+          late_threshold_minutes: settings.late_threshold_minutes,
+          half_day_hours: settings.half_day_hours,
+          working_days: settings.working_days,
+        });
+        setCompany(newCompany);
+      }
       alert('Settings saved successfully!');
     } catch (error) {
       console.error('Failed to save settings:', error);
