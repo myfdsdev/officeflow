@@ -201,7 +201,7 @@ export default function ProjectBoardPage() {
             {project.enabled_columns.includes('files') && (
               <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">Files</div>
             )}
-            {project.enabled_columns.includes('notes') && (
+            {project.enabled_columns && project.enabled_columns.includes('notes') && (
               <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">Notes</div>
             )}
             <div className="text-xs font-bold text-gray-600 uppercase tracking-wider"></div>
