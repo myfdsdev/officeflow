@@ -21,6 +21,7 @@ import { motion } from "framer-motion";
 import LeaveRequestForm from '../components/leave/LeaveRequestForm';
 import LeaveRequestList from '../components/leave/LeaveRequestList';
 import NotificationBell from '../components/notifications/NotificationBell';
+import CheckInReminder from '../components/attendance/CheckInReminder';
 
 // Live Timer Component
 function LiveTimer({ firstCheckIn, lastCheckOut }) {
@@ -159,53 +160,26 @@ export default function Dashboard() {
           location: 'Manual Check-In'
         });
         attendanceId = newAttendance.id;
-      }
-      
-      // Create attendance session
-      await base44.entities.AttendanceSession.create({
+        }
+
+        // Create attendance session
+        await base44.entities.AttendanceSession.create({
         attendance_id: attendanceId,
         employee_id: user.id,
         employee_email: user.email,
         date: today,
         check_in_time: checkInTime,
         is_active: true
-      });
+        });
 
-      const clockInTimeStr = format(now, 'HH:mm');
-      
-      // Get attendance data
-      const attendanceData = await base44.entities.Attendance.filter({
+        // Get attendance data
+        const attendanceData = await base44.entities.Attendance.filter({
         employee_id: user.id,
         date: today
-      });
-      const currentAttendance = attendanceData[0];
-      
-      // Send success notification to employee
-      await base44.entities.Notification.create({
-        user_email: user.email,
-        user_id: user.id,
-        title: 'Check-in Successful',
-        message: `You checked in at ${clockInTimeStr}${currentAttendance?.is_late ? ' (Late Entry)' : ''}`,
-        type: 'check_in',
-        related_id: attendanceId,
-      });
-
-      // Get all admins and notify them
-      const allUsers = await base44.entities.User.list();
-      const admins = allUsers.filter(u => u.role === 'admin');
-
-      for (const admin of admins) {
-        await base44.entities.Notification.create({
-          user_email: admin.email,
-          user_id: admin.id,
-          title: 'Employee Checked In',
-          message: `${user.full_name} has checked in at ${clockInTimeStr}`,
-          type: 'check_in',
-          related_id: user.id,
         });
-      }
+        const currentAttendance = attendanceData[0];
 
-      return currentAttendance;
+        return currentAttendance;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myAttendance'] });
@@ -254,17 +228,6 @@ export default function Dashboard() {
       });
       
       const attendance = updatedAttendance[0];
-
-      // Send success notification to employee
-      const clockOutTimeStr = format(now, 'HH:mm');
-      await base44.entities.Notification.create({
-        user_email: user.email,
-        user_id: user.id,
-        title: 'Check-out Successful',
-        message: `You checked out at ${clockOutTimeStr}. Total work hours: ${attendance.total_work_hours.toFixed(1)}hrs`,
-        type: 'check_in',
-        related_id: todayAttendance.id,
-      });
 
       return attendance;
     },
@@ -318,6 +281,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50">
+      <CheckInReminder user={user} todayAttendance={todayAttendance} />
       <div className="max-w-4xl mx-auto p-4 md:p-6 lg:p-8 pb-20">
         {/* Welcome Header */}
         <motion.div
