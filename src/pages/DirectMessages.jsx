@@ -116,12 +116,7 @@ export default function DirectMessages() {
       if (event.type === 'create') {
         const msg = event.data;
         if (msg.sender_id === user.id || msg.receiver_id === user.id) {
-          // Only invalidate if message is relevant to current conversation
-          if (selectedUser && (msg.sender_id === selectedUser.id || msg.receiver_id === selectedUser.id)) {
-            queryClient.invalidateQueries({ queryKey: ['messages', user.id, selectedUser.id] });
-          }
-          
-          // Always invalidate notifications
+          queryClient.invalidateQueries({ queryKey: ['messages'] });
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
           
           // Mark as read if from selected user
