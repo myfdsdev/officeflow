@@ -12,6 +12,7 @@ export default function ProjectsPage() {
   const [user, setUser] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     base44.auth.me().then(setUser);
@@ -38,6 +39,32 @@ export default function ProjectsPage() {
   const handleOpenProject = (projectId) => {
     navigate(createPageUrl('ProjectBoard') + `?projectId=${projectId}`);
   };
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId) => {
+      // Delete all tasks
+      const projectTasks = await base44.entities.Task.filter({ project_id: projectId });
+      for (const task of projectTasks) {
+        await base44.entities.Task.delete(task.id);
+      }
+
+      // Delete all members
+      const projectMembers = await base44.entities.ProjectMember.filter({ project_id: projectId });
+      for (const member of projectMembers) {
+        await base44.entities.ProjectMember.delete(member.id);
+      }
+
+      // Delete the project
+      await base44.entities.Project.delete(projectId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      alert('प्रोजेक्ट सफलतापूर्वक डिलीट हो गया।');
+    },
+    onError: (error) => {
+      alert('प्रोजेक्ट डिलीट करने में विफल: ' + error.message);
+    },
+  });
 
   if (!user || isLoading) {
     return (
@@ -85,6 +112,8 @@ export default function ProjectsPage() {
                 key={project.id}
                 project={project}
                 onOpen={handleOpenProject}
+                onDelete={(id) => deleteProjectMutation.mutate(id)}
+                isAdmin={user?.role === 'admin'}
               />
             ))}
           </div>
