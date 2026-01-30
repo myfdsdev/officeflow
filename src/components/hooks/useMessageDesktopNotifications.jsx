@@ -67,8 +67,19 @@ export function useMessageDesktopNotifications(user) {
 
               setTimeout(() => notif.close(), 8000);
 
-              notif.onclick = () => {
+              notif.onclick = async () => {
                 window.focus();
+                // Mark notification as read
+                await base44.entities.Notification.filter({
+                  user_email: user.email,
+                  type: 'new_message',
+                  is_read: false
+                }).then(notifs => {
+                  const relatedNotif = notifs.find(n => n.related_id === message.sender_id);
+                  if (relatedNotif) {
+                    base44.entities.Notification.update(relatedNotif.id, { is_read: true });
+                  }
+                });
                 window.location.href = `/DirectMessages?userId=${message.sender_id}`;
                 notif.close();
               };
@@ -124,8 +135,19 @@ export function useMessageDesktopNotifications(user) {
 
                 setTimeout(() => notif.close(), 8000);
 
-                notif.onclick = () => {
+                notif.onclick = async () => {
                   window.focus();
+                  // Mark notification as read
+                  await base44.entities.Notification.filter({
+                    user_email: user.email,
+                    type: 'new_message',
+                    is_read: false
+                  }).then(notifs => {
+                    const relatedNotif = notifs.find(n => n.related_id === message.group_id);
+                    if (relatedNotif) {
+                      base44.entities.Notification.update(relatedNotif.id, { is_read: true });
+                    }
+                  });
                   window.location.href = `/Groups?groupId=${message.group_id}`;
                   notif.close();
                 };

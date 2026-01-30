@@ -22,6 +22,16 @@ export default function Settings() {
   useEffect(() => {
     base44.auth.me().then((userData) => {
       setUser(userData);
+      // Load settings from user
+      if (userData?.office_start_time) {
+        setSettings({
+          office_start_time: userData.office_start_time || '09:00',
+          office_end_time: userData.office_end_time || '18:00',
+          late_threshold_minutes: userData.late_threshold_minutes || 15,
+          half_day_hours: userData.half_day_hours || 4,
+          working_days: userData.working_days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+        });
+      }
       setLoading(false);
     }).catch(() => {
       setLoading(false);
@@ -30,11 +40,20 @@ export default function Settings() {
 
   const handleSave = async () => {
     setSaving(true);
-    // In a real app, you would save settings to a database
-    setTimeout(() => {
+    try {
+      await base44.auth.updateMe({
+        office_start_time: settings.office_start_time,
+        office_end_time: settings.office_end_time,
+        late_threshold_minutes: settings.late_threshold_minutes,
+        half_day_hours: settings.half_day_hours,
+        working_days: settings.working_days,
+      });
       setSaving(false);
       alert('Settings saved successfully!');
-    }, 1000);
+    } catch (error) {
+      setSaving(false);
+      alert('Failed to save settings: ' + error.message);
+    }
   };
 
   if (loading) {
