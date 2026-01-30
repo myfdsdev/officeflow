@@ -61,10 +61,10 @@ import LeaveRequests from './pages/LeaveRequests';
 import MyProfile from './pages/MyProfile';
 import Pricing from './pages/Pricing';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import ProjectBoard from './pages/ProjectBoard';
+import Projects from './pages/Projects';
 import Settings from './pages/Settings';
 import Welcome from './pages/Welcome';
-import Projects from './pages/Projects';
-import ProjectBoard from './pages/ProjectBoard';
 import __Layout from './Layout.jsx';
 
 
@@ -83,10 +83,10 @@ export const PAGES = {
     "MyProfile": MyProfile,
     "Pricing": Pricing,
     "PrivacyPolicy": PrivacyPolicy,
+    "ProjectBoard": ProjectBoard,
+    "Projects": Projects,
     "Settings": Settings,
     "Welcome": Welcome,
-    "Projects": Projects,
-    "ProjectBoard": ProjectBoard,
 }
 
 export const pagesConfig = {

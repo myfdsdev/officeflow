@@ -106,17 +106,17 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
 
   return (
     <div 
-      className="border-b border-gray-200 px-6 py-4 hover:bg-gray-50 transition-colors grid gap-4 items-center"
+      className="border-b border-gray-100 px-6 py-3.5 hover:bg-indigo-50/30 transition-all duration-200 grid gap-3 items-center group"
       style={{
-        gridTemplateColumns: `300px ${project.enabled_columns.map(col => {
-          if (col === 'owner') return '200px';
-          if (col === 'status') return '180px';
-          if (col === 'due_date') return '150px';
-          if (col === 'priority') return '130px';
-          if (col === 'files') return '120px';
+        gridTemplateColumns: `220px ${project.enabled_columns.map(col => {
+          if (col === 'owner') return '180px';
+          if (col === 'status') return '160px';
+          if (col === 'due_date') return '140px';
+          if (col === 'priority') return '120px';
+          if (col === 'files') return '100px';
           if (col === 'notes') return '1fr';
-          return '150px';
-        }).join(' ')} 80px`
+          return '140px';
+        }).join(' ')} 60px`
       }}
     >
       {/* Task Name */}
@@ -128,12 +128,12 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
             onBlur={handleSaveName}
             onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
             autoFocus
-            className="h-8"
+            className="h-9 text-sm font-medium"
           />
         ) : (
           <div 
             onClick={() => canEdit && setIsEditing(true)}
-            className={`font-medium ${canEdit ? 'cursor-pointer hover:text-indigo-600' : ''}`}
+            className={`font-semibold text-sm text-gray-800 ${canEdit ? 'cursor-pointer hover:text-indigo-600 transition-colors' : ''}`}
           >
             {task.task_name}
           </div>
@@ -282,7 +282,7 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
       {project.enabled_columns.includes('notes') && (
         <div
           onClick={handleNotesClick}
-          className={`${canEdit ? 'cursor-pointer hover:bg-indigo-50' : ''} rounded px-2 py-1 transition-colors`}
+          className={`${canEdit ? 'cursor-pointer hover:bg-white hover:shadow-sm' : ''} rounded-lg px-3 py-2 transition-all duration-200 border border-transparent ${canEdit ? 'hover:border-indigo-200' : ''}`}
         >
           {notesEditMode && canEdit ? (
             <Textarea
@@ -290,13 +290,13 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
               value={notesValue}
               onChange={handleNotesChange}
               onBlur={handleNotesBlur}
-              placeholder="Add notes..."
-              className="min-h-[60px] max-h-[150px] resize-y text-sm"
+              placeholder="Type your notes here..."
+              className="min-h-[60px] max-h-[150px] resize-y text-sm border-indigo-300 focus:border-indigo-500"
               rows={2}
             />
           ) : (
-            <div className="text-sm text-gray-700 whitespace-pre-wrap break-words">
-              {notesValue ? notesValue : <span className="text-gray-400 italic">Click to add notes</span>}
+            <div className="text-sm text-gray-700 whitespace-pre-wrap break-words min-h-[36px] flex items-center">
+              {notesValue ? notesValue : <span className="text-gray-400 italic text-xs">Click to add notes...</span>}
             </div>
           )}
         </div>
@@ -305,7 +305,12 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
       {/* Actions */}
       <div>
         {isAdmin && (
-          <Button variant="ghost" size="icon" onClick={onDelete} className="text-red-600 hover:text-red-700">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onDelete} 
+            className="text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+          >
             <Trash2 className="w-4 h-4" />
           </Button>
         )}

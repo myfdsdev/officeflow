@@ -174,37 +174,37 @@ export default function ProjectBoardPage() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           {/* Table Header */}
-          <div className="bg-gray-50 border-b border-gray-200 px-6 py-3 grid gap-4" style={{
-            gridTemplateColumns: `300px ${project.enabled_columns.map(col => {
-              if (col === 'owner') return '200px';
-              if (col === 'status') return '180px';
-              if (col === 'due_date') return '150px';
-              if (col === 'priority') return '130px';
-              if (col === 'files') return '120px';
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 px-6 py-3.5 grid gap-3 items-center" style={{
+            gridTemplateColumns: `220px ${project.enabled_columns.map(col => {
+              if (col === 'owner') return '180px';
+              if (col === 'status') return '160px';
+              if (col === 'due_date') return '140px';
+              if (col === 'priority') return '120px';
+              if (col === 'files') return '100px';
               if (col === 'notes') return '1fr';
-              return '150px';
-            }).join(' ')} 80px`
+              return '140px';
+            }).join(' ')} 60px`
           }}>
-            <div className="text-sm font-semibold text-gray-700">Task</div>
+            <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">Task</div>
             {project.enabled_columns.includes('owner') && (
-              <div className="text-sm font-semibold text-gray-700">Owner</div>
+              <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">Owner</div>
             )}
             {project.enabled_columns.includes('status') && (
-              <div className="text-sm font-semibold text-gray-700">Status</div>
+              <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">Status</div>
             )}
             {project.enabled_columns.includes('due_date') && (
-              <div className="text-sm font-semibold text-gray-700">Due Date</div>
+              <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">Due Date</div>
             )}
             {project.enabled_columns.includes('priority') && (
-              <div className="text-sm font-semibold text-gray-700">Priority</div>
+              <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">Priority</div>
             )}
             {project.enabled_columns.includes('files') && (
-              <div className="text-sm font-semibold text-gray-700">Files</div>
+              <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">Files</div>
             )}
             {project.enabled_columns.includes('notes') && (
-              <div className="text-sm font-semibold text-gray-700">Notes</div>
+              <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">Notes</div>
             )}
-            <div className="text-sm font-semibold text-gray-700"></div>
+            <div className="text-xs font-bold text-gray-600 uppercase tracking-wider"></div>
           </div>
 
           {/* Task Rows */}
