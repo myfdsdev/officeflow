@@ -15,22 +15,41 @@ export function useAutoCheckIn(user) {
         const today = format(new Date(), 'yyyy-MM-dd');
         const lastCheckInDate = localStorage.getItem(`last_checkin_${user.id}`);
         
-        // Check if already checked in today in localStorage
-        if (lastCheckInDate === today) {
-          console.log('Already checked in today (localStorage)');
-          return;
-        }
-        
-        // Check if there's an active session
-        const activeSessions = await base44.entities.AttendanceSession.filter({
+        // Check if there's already an attendance record for today
+        const existingAttendance = await base44.entities.Attendance.filter({
           employee_id: user.id,
-          date: today,
-          is_active: true
+          date: today
         });
         
-        if (activeSessions && activeSessions.length > 0) {
-          console.log('Active session already exists');
+        if (existingAttendance && existingAttendance.length > 0) {
+          console.log('Attendance already exists for today');
           localStorage.setItem(`last_checkin_${user.id}`, today);
+          
+          // Check if there's an active session
+          const activeSessions = await base44.entities.AttendanceSession.filter({
+            employee_id: user.id,
+            date: today,
+            is_active: true
+          });
+          
+          // If no active session but attendance exists, create a new session (PC restart case)
+          if (!activeSessions || activeSessions.length === 0) {
+            const now = new Date();
+            await base44.entities.AttendanceSession.create({
+              attendance_id: existingAttendance[0].id,
+              employee_id: user.id,
+              employee_email: user.email,
+              date: today,
+              check_in_time: now.toISOString(),
+              is_active: true
+            });
+            
+            await base44.entities.Attendance.update(existingAttendance[0].id, {
+              has_active_session: true
+            });
+            
+            console.log('New session created after PC restart');
+          }
           return;
         }
         

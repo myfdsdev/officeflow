@@ -31,7 +31,7 @@ export default function NotificationBell({ userEmail, notificationType = null })
       return await base44.entities.Notification.filter({ user_email: userEmail }, '-created_date', 50);
     },
     enabled: !!userEmail,
-    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchInterval: false, // Disable polling, use real-time only
   });
 
   // Real-time subscription for notifications
@@ -104,7 +104,20 @@ export default function NotificationBell({ userEmail, notificationType = null })
               <DropdownMenuItem
                 key={notification.id}
                 className={`px-3 py-3 cursor-pointer ${!notification.is_read ? 'bg-indigo-50' : ''}`}
-                onClick={() => !notification.is_read && markAsReadMutation.mutate(notification.id)}
+                onClick={() => {
+                  if (!notification.is_read) {
+                    markAsReadMutation.mutate(notification.id);
+                  }
+                  
+                  // Navigate based on notification type
+                  if (notification.type === 'project_added' && notification.related_id) {
+                    window.location.href = `/ProjectBoard?projectId=${notification.related_id}`;
+                  } else if (notification.type === 'group_added') {
+                    window.location.href = '/Groups';
+                  } else if (notification.type === 'new_message') {
+                    window.location.href = '/DirectMessages';
+                  }
+                }}
               >
                 <div className="flex-1">
                   <p className={`text-sm ${!notification.is_read ? 'font-semibold' : 'font-medium'}`}>
