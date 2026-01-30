@@ -113,13 +113,13 @@ export default function Layout({ children, currentPageName }) {
                     }`}
                   >
                     <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-                    <span className={item.name === 'Direct Messages' ? 'flex-1 mr-8' : 'flex-1'}>{item.name}</span>
+                    <span className="flex-1 whitespace-nowrap">{item.name}</span>
                     {item.name === 'Direct Messages' && user && (
-                      <div className="pointer-events-auto">
+                      <div className="pointer-events-auto flex-shrink-0">
                         <NotificationBell userEmail={user.email} notificationType="new_message" />
                       </div>
                     )}
-                    {isActive && <ChevronRight className="w-4 h-4" />}
+                    {isActive && <ChevronRight className="w-4 h-4 flex-shrink-0" />}
                   </Link>
                 </div>
               );
@@ -152,13 +152,13 @@ export default function Layout({ children, currentPageName }) {
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-                  <span className={item.name === 'Direct Messages' ? 'flex-1 mr-8' : 'flex-1'}>{item.name}</span>
+                  <span className="flex-1 whitespace-nowrap">{item.name}</span>
                   {item.name === 'Direct Messages' && user && (
-                    <div className="pointer-events-auto">
+                    <div className="pointer-events-auto flex-shrink-0">
                       <NotificationBell userEmail={user.email} notificationType="new_message" />
                     </div>
                   )}
-                  {isActive && <ChevronRight className="w-4 h-4" />}
+                  {isActive && <ChevronRight className="w-4 h-4 flex-shrink-0" />}
                 </Link>
               </div>
             );
