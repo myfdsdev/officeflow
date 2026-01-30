@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
 
-const ACTIVITY_INTERVAL = 120000; // Update every 2 minutes (reduced from 30s to avoid rate limits)
-const INACTIVITY_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours - effectively disabling auto checkout
+const ACTIVITY_INTERVAL = 30000; // Update every 30 seconds
+const INACTIVITY_THRESHOLD = 15 * 60 * 1000; // 15 minutes for auto checkout
 
 export function useUserActivity(user) {
   const activityTimerRef = useRef(null);
@@ -24,8 +24,47 @@ export function useUserActivity(user) {
   };
 
   const autoCheckOut = async () => {
-    // Auto check-out disabled - users must manually check out
-    return;
+    if (!user?.id) return;
+    
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      // Find active sessions
+      const activeSessions = await base44.entities.AttendanceSession.filter({
+        employee_id: user.id,
+        date: today,
+        is_active: true
+      });
+      
+      if (activeSessions && activeSessions.length > 0) {
+        const checkOutTime = new Date(lastActivityRef.current).toISOString();
+        
+        for (const session of activeSessions) {
+          // Calculate session duration
+          const checkInTime = new Date(session.check_in_time);
+          const checkOutTimeDate = new Date(checkOutTime);
+          const durationHours = (checkOutTimeDate - checkInTime) / (1000 * 60 * 60);
+          
+          // Update session
+          await base44.entities.AttendanceSession.update(session.id, {
+            check_out_time: checkOutTime,
+            session_duration: durationHours,
+            is_active: false,
+            check_out_reason: 'auto_inactive'
+          });
+        }
+        
+        // Recalculate attendance
+        await base44.functions.invoke('calculateAttendance', {
+          employee_id: user.id,
+          date: today
+        });
+        
+        console.log('Auto check-out due to inactivity');
+      }
+    } catch (error) {
+      console.error('Auto check-out failed:', error);
+    }
   };
 
   const resetInactivityTimer = () => {
@@ -77,7 +116,52 @@ export function useUserActivity(user) {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Beforeunload auto-checkout disabled - users must manually check out
+    // Handle beforeunload (PC shutdown, browser close)
+    const handleBeforeUnload = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const activeSessions = await base44.entities.AttendanceSession.filter({
+          employee_id: user.id,
+          date: today,
+          is_active: true
+        });
+        
+        if (activeSessions && activeSessions.length > 0) {
+          const checkOutTime = new Date().toISOString();
+          
+          for (const session of activeSessions) {
+            const checkInTime = new Date(session.check_in_time);
+            const checkOutTimeDate = new Date(checkOutTime);
+            const durationHours = (checkOutTimeDate - checkInTime) / (1000 * 60 * 60);
+            
+            await base44.entities.AttendanceSession.update(session.id, {
+              check_out_time: checkOutTime,
+              session_duration: durationHours,
+              is_active: false,
+              check_out_reason: 'auto_shutdown'
+            });
+          }
+          
+          // Recalculate attendance
+          await base44.functions.invoke('calculateAttendance', {
+            employee_id: user.id,
+            date: today
+          });
+        }
+      } catch (error) {
+        console.error('Error during beforeunload:', error);
+      }
+      
+      // Use sendBeacon for reliable status update
+      navigator.sendBeacon('/api/user/status', JSON.stringify({
+        is_online: false,
+        last_active_time: new Date().toISOString(),
+      }));
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     // Cleanup
     return () => {
@@ -91,6 +175,7 @@ export function useUserActivity(user) {
         window.removeEventListener(event, handleActivity);
       });
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       
       // Set offline when unmounting
       updateOnlineStatus(false);

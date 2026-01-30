@@ -11,8 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { format, parseISO } from 'date-fns';
 
 export default function NotificationBell({ userEmail, notificationType = null }) {
   const queryClient = useQueryClient();
@@ -32,7 +31,7 @@ export default function NotificationBell({ userEmail, notificationType = null })
       return await base44.entities.Notification.filter({ user_email: userEmail }, '-created_date', 50);
     },
     enabled: !!userEmail,
-    refetchInterval: false, // Disable polling, use real-time only
+    refetchInterval: 5000, // Refetch every 5 seconds
   });
 
   // Real-time subscription for notifications
@@ -105,20 +104,7 @@ export default function NotificationBell({ userEmail, notificationType = null })
               <DropdownMenuItem
                 key={notification.id}
                 className={`px-3 py-3 cursor-pointer ${!notification.is_read ? 'bg-indigo-50' : ''}`}
-                onClick={() => {
-                  if (!notification.is_read) {
-                    markAsReadMutation.mutate(notification.id);
-                  }
-                  
-                  // Navigate based on notification type
-                  if (notification.type === 'project_added' && notification.related_id) {
-                    window.location.href = `/ProjectBoard?projectId=${notification.related_id}`;
-                  } else if (notification.type === 'group_added') {
-                    window.location.href = '/Groups';
-                  } else if (notification.type === 'new_message') {
-                    window.location.href = '/DirectMessages';
-                  }
-                }}
+                onClick={() => !notification.is_read && markAsReadMutation.mutate(notification.id)}
               >
                 <div className="flex-1">
                   <p className={`text-sm ${!notification.is_read ? 'font-semibold' : 'font-medium'}`}>
@@ -126,7 +112,7 @@ export default function NotificationBell({ userEmail, notificationType = null })
                   </p>
                   <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    {format(toZonedTime(new Date(notification.created_date + 'Z'), 'Asia/Kolkata'), 'MMM d, h:mm a')}
+                    {format(parseISO(notification.created_date), 'MMM d, h:mm a')}
                   </p>
                 </div>
               </DropdownMenuItem>

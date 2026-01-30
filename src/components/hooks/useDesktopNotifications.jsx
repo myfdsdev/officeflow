@@ -68,18 +68,6 @@ export function useDesktopNotifications(user) {
               window.location.href = '/DirectMessages';
             } else if (notification.type === 'group_added') {
               window.location.href = '/Groups';
-            } else if (notification.type === 'project_added') {
-              // Navigate to ProjectBoard with project ID
-              if (notification.related_id) {
-                window.location.href = `/ProjectBoard?projectId=${notification.related_id}`;
-              } else {
-                window.location.href = '/Projects';
-              }
-            }
-            
-            // Mark notification as read
-            if (notification.id) {
-              base44.entities.Notification.update(notification.id, { is_read: true }).catch(console.error);
             }
             
             desktopNotif.close();
