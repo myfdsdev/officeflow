@@ -100,77 +100,95 @@ export default function Dashboard() {
 
   const clockInMutation = useMutation({
     mutationFn: async () => {
-      // Check for duplicate attendance
-      const existingAttendance = await base44.entities.Attendance.filter({
-        employee_email: user.email,
+      const now = new Date();
+      const checkInTime = now.toISOString();
+      
+      // Get or create attendance record
+      let attendance = await base44.entities.Attendance.filter({
+        employee_id: user.id,
         date: today
       });
-
-      if (existingAttendance.length > 0) {
-        throw new Error('Attendance already marked for today');
-      }
-
-      // Check for approved leave on this date
-      const approvedLeaves = await base44.entities.LeaveRequest.filter({
-        employee_email: user.email,
-        status: 'approved'
-      });
-
-      const hasLeaveToday = approvedLeaves.some(leave => {
-        const startDate = new Date(leave.start_date);
-        const endDate = new Date(leave.end_date);
-        const todayDate = new Date(today);
-        return todayDate >= startDate && todayDate <= endDate;
-      });
-
-      if (hasLeaveToday) {
-        throw new Error('You have an approved leave for today. Please contact admin to cancel the leave first.');
-      }
-
-      const now = new Date();
-      const clockInTime = format(now, 'HH:mm');
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const totalMinutes = hours * 60 + minutes;
       
-      // Determine status based on check-in time
-      // Before 10:00 AM (600 minutes) → Present
-      // After 10:15 AM (615 minutes) → Late
-      // Between 10:00 and 10:15 → Present (grace period)
-      let status = 'present';
-      if (totalMinutes > 615) {
-        status = 'late';
+      let attendanceId;
+      if (attendance && attendance.length > 0) {
+        attendanceId = attendance[0].id;
+        // Update existing attendance
+        await base44.entities.Attendance.update(attendanceId, {
+          has_active_session: true
+        });
+      } else {
+
+        // Check for approved leave on this date
+        const approvedLeaves = await base44.entities.LeaveRequest.filter({
+          employee_email: user.email,
+          status: 'approved'
+        });
+
+        const hasLeaveToday = approvedLeaves.some(leave => {
+          const startDate = new Date(leave.start_date);
+          const endDate = new Date(leave.end_date);
+          const todayDate = new Date(today);
+          return todayDate >= startDate && todayDate <= endDate;
+        });
+
+        if (hasLeaveToday) {
+          throw new Error('You have an approved leave for today. Please contact admin to cancel the leave first.');
+        }
+
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const totalMinutes = hours * 60 + minutes;
+        
+        // Determine status based on check-in time
+        let status = 'present';
+        let isLate = false;
+        if (totalMinutes > 615) {
+          status = 'present';
+          isLate = true;
+        }
+        
+        const newAttendance = await base44.entities.Attendance.create({
+          employee_id: user.id,
+          employee_email: user.email,
+          employee_name: user.full_name,
+          date: today,
+          first_check_in: checkInTime,
+          status: status,
+          is_late: isLate,
+          has_active_session: true,
+          location: 'Manual Check-In'
+        });
+        attendanceId = newAttendance.id;
       }
       
-      const attendance = await base44.entities.Attendance.create({
+      // Create attendance session
+      await base44.entities.AttendanceSession.create({
+        attendance_id: attendanceId,
         employee_id: user.id,
         employee_email: user.email,
-        employee_name: user.full_name,
         date: today,
-        first_check_in: new Date().toISOString(),
-        status: status,
-        has_active_session: true,
+        check_in_time: checkInTime,
+        is_active: true
       });
 
+      const clockInTimeStr = format(now, 'HH:mm');
+      
+      // Get attendance data
+      const attendanceData = await base44.entities.Attendance.filter({
+        employee_id: user.id,
+        date: today
+      });
+      const currentAttendance = attendanceData[0];
+      
       // Send success notification to employee
       await base44.entities.Notification.create({
         user_email: user.email,
+        user_id: user.id,
         title: 'Check-in Successful',
-        message: `You checked in at ${clockInTime}${status === 'late' ? ' (Late Entry)' : ''}`,
+        message: `You checked in at ${clockInTimeStr}${currentAttendance?.is_late ? ' (Late Entry)' : ''}`,
         type: 'check_in',
-        related_id: attendance.id,
+        related_id: attendanceId,
       });
-
-      // If late, send late entry alert
-      if (status === 'late') {
-        await base44.entities.Notification.create({
-          user_email: user.email,
-          title: 'Late Entry Alert',
-          message: `Your check-in at ${clockInTime} is after office time. Please contact HR if needed.`,
-          type: 'check_in',
-          related_id: attendance.id,
-        });
-      }
 
       // Get all admins and notify them
       const allUsers = await base44.entities.User.list();
@@ -179,14 +197,15 @@ export default function Dashboard() {
       for (const admin of admins) {
         await base44.entities.Notification.create({
           user_email: admin.email,
+          user_id: admin.id,
           title: 'Employee Checked In',
-          message: `${user.full_name} has checked in at ${clockInTime} (${status})`,
+          message: `${user.full_name} has checked in at ${clockInTimeStr}`,
           type: 'check_in',
-          related_id: attendance.id,
+          related_id: user.id,
         });
       }
 
-      return attendance;
+      return currentAttendance;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myAttendance'] });
@@ -200,34 +219,54 @@ export default function Dashboard() {
   const clockOutMutation = useMutation({
     mutationFn: async () => {
       const now = new Date();
-      const checkIn = new Date(todayAttendance.first_check_in);
-      const workHours = (now - checkIn) / (1000 * 60 * 60);
+      const checkOutTime = now.toISOString();
       
-      // Determine final status based on work hours
-      // If less than 4 hours → Half Day
-      let finalStatus = todayAttendance.status;
-      if (workHours < 4) {
-        finalStatus = 'half_day';
+      // Find and close all active sessions
+      const activeSessions = await base44.entities.AttendanceSession.filter({
+        employee_id: user.id,
+        date: today,
+        is_active: true
+      });
+      
+      for (const session of activeSessions) {
+        const checkInTime = new Date(session.check_in_time);
+        const checkOutTimeDate = new Date(checkOutTime);
+        const durationHours = (checkOutTimeDate - checkInTime) / (1000 * 60 * 60);
+        
+        await base44.entities.AttendanceSession.update(session.id, {
+          check_out_time: checkOutTime,
+          session_duration: durationHours,
+          is_active: false,
+          check_out_reason: 'manual'
+        });
       }
       
-      const updated = await base44.entities.Attendance.update(todayAttendance.id, {
-        last_check_out: now.toISOString(),
-        total_work_hours: workHours,
-        status: finalStatus,
-        has_active_session: false,
+      // Recalculate total attendance
+      await base44.functions.invoke('calculateAttendance', {
+        employee_id: user.id,
+        date: today
       });
+      
+      // Get updated attendance
+      const updatedAttendance = await base44.entities.Attendance.filter({
+        employee_id: user.id,
+        date: today
+      });
+      
+      const attendance = updatedAttendance[0];
 
       // Send success notification to employee
       const clockOutTimeStr = format(now, 'HH:mm');
       await base44.entities.Notification.create({
         user_email: user.email,
+        user_id: user.id,
         title: 'Check-out Successful',
-        message: `You checked out at ${clockOutTimeStr}. Total work hours: ${workHours.toFixed(1)}hrs`,
+        message: `You checked out at ${clockOutTimeStr}. Total work hours: ${attendance.total_work_hours.toFixed(1)}hrs`,
         type: 'check_in',
         related_id: todayAttendance.id,
       });
 
-      return updated;
+      return attendance;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myAttendance'] });
