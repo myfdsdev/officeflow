@@ -53,7 +53,7 @@ import AttendanceHistory from './pages/AttendanceHistory';
 import AttendanceReports from './pages/AttendanceReports';
 import Checkout from './pages/Checkout';
 import CompleteProfile from './pages/CompleteProfile';
-import DirectMessages from './pages/DirectMessages';
+import Dashboard from './pages/Dashboard';
 import EmployeeDetails from './pages/EmployeeDetails';
 import Groups from './pages/Groups';
 import LeaveRequests from './pages/LeaveRequests';
@@ -62,9 +62,9 @@ import Pricing from './pages/Pricing';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import ProjectBoard from './pages/ProjectBoard';
 import Projects from './pages/Projects';
-import Welcome from './pages/Welcome';
 import Settings from './pages/Settings';
-import Dashboard from './pages/Dashboard';
+import Welcome from './pages/Welcome';
+import DirectMessages from './pages/DirectMessages';
 import __Layout from './Layout.jsx';
 
 
@@ -75,7 +75,7 @@ export const PAGES = {
     "AttendanceReports": AttendanceReports,
     "Checkout": Checkout,
     "CompleteProfile": CompleteProfile,
-    "DirectMessages": DirectMessages,
+    "Dashboard": Dashboard,
     "EmployeeDetails": EmployeeDetails,
     "Groups": Groups,
     "LeaveRequests": LeaveRequests,
@@ -84,9 +84,9 @@ export const PAGES = {
     "PrivacyPolicy": PrivacyPolicy,
     "ProjectBoard": ProjectBoard,
     "Projects": Projects,
-    "Welcome": Welcome,
     "Settings": Settings,
-    "Dashboard": Dashboard,
+    "Welcome": Welcome,
+    "DirectMessages": DirectMessages,
 }
 
 export const pagesConfig = {

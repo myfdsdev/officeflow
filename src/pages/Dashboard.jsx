@@ -21,6 +21,7 @@ import { motion } from "framer-motion";
 import LeaveRequestForm from '../components/leave/LeaveRequestForm';
 import LeaveRequestList from '../components/leave/LeaveRequestList';
 import NotificationBell from '../components/notifications/NotificationBell';
+import AttendanceReminderPopup from '../components/attendance/AttendanceReminderPopup';
 
 // Live Timer Component
 function LiveTimer({ firstCheckIn, lastCheckOut }) {
@@ -77,6 +78,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
+  const [showAttendanceReminder, setShowAttendanceReminder] = useState(false);
   const queryClient = useQueryClient();
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -97,6 +99,19 @@ export default function Dashboard() {
   });
 
   const todayAttendance = myAttendance.find(a => a.date === today);
+
+  // Show attendance reminder when app loads if no check-in today
+  useEffect(() => {
+    if (todayAttendance === undefined && user?.email) {
+      // Wait a bit for data to load
+      const timer = setTimeout(() => {
+        if (!todayAttendance) {
+          setShowAttendanceReminder(true);
+        }
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [todayAttendance, user]);
 
   const clockInMutation = useMutation({
     mutationFn: async () => {
@@ -550,6 +565,16 @@ export default function Dashboard() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Attendance Reminder Popup */}
+        <AttendanceReminderPopup
+          isOpen={showAttendanceReminder && !todayAttendance}
+          onDismiss={() => setShowAttendanceReminder(false)}
+          onCheckIn={() => {
+            setShowAttendanceReminder(false);
+            clockInMutation.mutate();
+          }}
+        />
       </div>
     </div>
   );
