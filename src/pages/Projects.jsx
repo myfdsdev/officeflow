@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ export default function ProjectsPage() {
   const [user, setUser] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     base44.auth.me().then(setUser);
@@ -37,6 +38,28 @@ export default function ProjectsPage() {
 
   const handleOpenProject = (projectId) => {
     navigate(createPageUrl('ProjectBoard') + `?projectId=${projectId}`);
+  };
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId) => {
+      // Delete all tasks first
+      const tasks = await base44.entities.Task.filter({ project_id: projectId });
+      await Promise.all(tasks.map(task => base44.entities.Task.delete(task.id)));
+      
+      // Delete all project members
+      const members = await base44.entities.ProjectMember.filter({ project_id: projectId });
+      await Promise.all(members.map(member => base44.entities.ProjectMember.delete(member.id)));
+      
+      // Delete the project
+      await base44.entities.Project.delete(projectId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+
+  const handleDeleteProject = (projectId) => {
+    deleteProjectMutation.mutate(projectId);
   };
 
   if (!user || isLoading) {
@@ -85,6 +108,8 @@ export default function ProjectsPage() {
                 key={project.id}
                 project={project}
                 onOpen={handleOpenProject}
+                onDelete={handleDeleteProject}
+                isAdmin={user.role === 'admin'}
               />
             ))}
           </div>
