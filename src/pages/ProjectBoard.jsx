@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, Users, Settings } from "lucide-react";
+import { ArrowLeft, Plus, Users, Settings, Trash2 } from "lucide-react";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import TaskRow from '../components/projects/TaskRow';
@@ -71,6 +71,30 @@ export default function ProjectBoardPage() {
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     },
   });
+
+  const handleDeleteProject = async () => {
+    try {
+      // Delete all tasks
+      const projectTasks = await base44.entities.Task.filter({ project_id: projectId });
+      for (const task of projectTasks) {
+        await base44.entities.Task.delete(task.id);
+      }
+
+      // Delete all members
+      const projectMembers = await base44.entities.ProjectMember.filter({ project_id: projectId });
+      for (const member of projectMembers) {
+        await base44.entities.ProjectMember.delete(member.id);
+      }
+
+      // Delete the project
+      await base44.entities.Project.delete(projectId);
+
+      // Redirect to projects page
+      window.location.href = createPageUrl('Projects');
+    } catch (error) {
+      alert('Failed to delete project: ' + error.message);
+    }
+  };
 
   if (!user || !project) {
     return (
@@ -160,10 +184,25 @@ export default function ProjectBoardPage() {
                 {members.length} Members
               </Button>
               {isAdmin && (
-                <Button onClick={() => setShowAddTask(true)} size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Task
-                </Button>
+                <>
+                  <Button onClick={() => setShowAddTask(true)} size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Task
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this project? This will also delete all tasks and members.')) {
+                        handleDeleteProject();
+                      }
+                    }}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Delete Project
+                  </Button>
+                </>
               )}
             </div>
           </div>
