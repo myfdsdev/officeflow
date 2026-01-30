@@ -107,7 +107,7 @@ export default function Dashboard() {
       });
 
       if (existingAttendance.length > 0) {
-        throw new Error('आज की उपस्थिति पहले से ही दर्ज है। आप एक दिन में केवल एक बार चेक इन कर सकते हैं।');
+        throw new Error('Attendance already marked for today');
       }
 
       // Check for approved leave on this date
@@ -124,7 +124,7 @@ export default function Dashboard() {
       });
 
       if (hasLeaveToday) {
-        throw new Error('आज आपकी छुट्टी स्वीकृत है। कृपया पहले व्यवस्थापक से संपर्क करके छुट्टी रद्द करें।');
+        throw new Error('You have an approved leave for today. Please contact admin to cancel the leave first.');
       }
 
       const now = new Date();
@@ -190,10 +190,10 @@ export default function Dashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myAttendance'] });
-      alert('चेक-इन सफल! आपकी उपस्थिति दर्ज हो गई है। ✓');
+      alert('Check-in successful! ✓');
     },
     onError: (error) => {
-      alert(error.message || 'चेक इन विफल रहा। कृपया पुनः प्रयास करें।');
+      alert(error.message || 'Failed to check in. Please try again.');
     },
   });
 
@@ -231,10 +231,10 @@ export default function Dashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myAttendance'] });
-      alert('चेक-आउट सफल! आपका कार्य समय दर्ज हो गया है। ✓');
+      alert('Check-out successful! ✓');
     },
     onError: (error) => {
-      alert(error.message || 'चेक आउट विफल रहा। कृपया पुनः प्रयास करें।');
+      alert(error.message || 'Failed to check out. Please try again.');
     },
   });
 

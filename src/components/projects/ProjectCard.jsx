@@ -1,11 +1,11 @@
 import React from 'react';
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FolderKanban, Users, CheckSquare, Trash2 } from "lucide-react";
+import { FolderKanban, Users, CheckSquare } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
-export default function ProjectCard({ project, onOpen, onDelete, isAdmin }) {
+export default function ProjectCard({ project, onOpen }) {
   const { data: tasks = [] } = useQuery({
     queryKey: ['project-tasks-count', project.id],
     queryFn: () => base44.entities.Task.filter({ project_id: project.id }),
@@ -57,21 +57,6 @@ export default function ProjectCard({ project, onOpen, onDelete, isAdmin }) {
               <p className="text-sm text-gray-500 mt-1">{project.description}</p>
             </div>
           </div>
-          {isAdmin && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm('क्या आप वाकई इस प्रोजेक्ट को डिलीट करना चाहते हैं? इससे सभी टास्क और मेंबर्स भी डिलीट हो जाएंगे।')) {
-                  onDelete(project.id);
-                }
-              }}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="w-5 h-5" />
-            </Button>
-          )}
         </div>
       </CardHeader>
       <CardContent>
