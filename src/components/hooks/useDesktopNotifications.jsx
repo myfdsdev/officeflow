@@ -30,6 +30,11 @@ export function useDesktopNotifications(user) {
         
         console.log('New notification received:', notification.title);
         
+        // Skip desktop notifications for attendance reminders and check-in/check-out actions
+        if (notification.type === 'attendance_reminder' || notification.type === 'check_in') {
+          return;
+        }
+        
         if (Notification.permission === 'granted') {
           // Create notification options
           const options = {

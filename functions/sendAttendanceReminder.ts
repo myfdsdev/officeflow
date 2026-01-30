@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     // Find employees who haven't checked in
     const missingAttendance = employeeUsers.filter(emp => !attendedEmails.includes(emp.email));
 
-    // Create reminder notifications
+    // Create in-app notifications only (no desktop notification for check-in reminders)
     const notifications = [];
     for (const employee of missingAttendance) {
       const notification = await base44.asServiceRole.entities.Notification.create({
