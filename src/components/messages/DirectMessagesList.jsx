@@ -90,7 +90,7 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
 
     fetchUsers();
 
-    // Subscribe to message updates - only update unread counts, not full user list
+    // Subscribe to message updates - only update unread counts
     const messageUnsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create' || event.type === 'update') {
         const msg = event.data;
@@ -100,29 +100,16 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
       }
     });
 
-    // Debounced online status updates
-    let statusUpdateTimeout;
-    const userUnsubscribe = base44.entities.User.subscribe((event) => {
-      if (event.type === 'update') {
-        const updatedUser = event.data;
-        
-        clearTimeout(statusUpdateTimeout);
-        statusUpdateTimeout = setTimeout(() => {
-          updateUserOnlineStatus(
-            updatedUser.id, 
-            updatedUser.is_online, 
-            updatedUser.last_active_time
-          );
-        }, 15000); // 15 second debounce
-      } else if (event.type === 'create') {
-        fetchUsers(); // Only full refresh for new users
+    // Polling for online status updates instead of real-time subscription (every 60 seconds)
+    const statusInterval = setInterval(() => {
+      if (currentUser) {
+        fetchUsers();
       }
-    });
+    }, 60000);
 
     return () => {
       messageUnsubscribe();
-      userUnsubscribe();
-      clearTimeout(statusUpdateTimeout);
+      clearInterval(statusInterval);
     };
   }, [currentUser]);
 

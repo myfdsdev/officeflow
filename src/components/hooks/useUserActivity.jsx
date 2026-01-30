@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
 
-const ACTIVITY_INTERVAL = 30000; // Update every 30 seconds
+const ACTIVITY_INTERVAL = 120000; // Update every 2 minutes (reduced from 30s to avoid rate limits)
 const INACTIVITY_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours - effectively disabling auto checkout
 
 export function useUserActivity(user) {
