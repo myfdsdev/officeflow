@@ -11,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 export default function NotificationBell({ userEmail, notificationType = null }) {
   const queryClient = useQueryClient();
@@ -125,7 +126,7 @@ export default function NotificationBell({ userEmail, notificationType = null })
                   </p>
                   <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    {new Date(notification.created_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    {format(toZonedTime(new Date(notification.created_date + 'Z'), 'Asia/Kolkata'), 'MMM d, h:mm a')}
                   </p>
                 </div>
               </DropdownMenuItem>
