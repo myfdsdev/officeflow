@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns";
 import { base44 } from '@/api/base44Client';
 import FilesDialog from './FilesDialog';
+import NotesPopup from './NotesPopup';
 
 const statusConfig = {
   not_started: { label: 'Not Started', color: 'bg-gray-100 text-gray-800' },
@@ -29,10 +30,7 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
   const [editedName, setEditedName] = useState(task.task_name);
   const [uploading, setUploading] = useState(false);
   const [showFilesDialog, setShowFilesDialog] = useState(false);
-  const [notesValue, setNotesValue] = useState(task.notes || '');
-  const [notesTimeout, setNotesTimeout] = useState(null);
-  const [notesEditMode, setNotesEditMode] = useState(false);
-  const textareaRef = React.useRef(null);
+  const [showNotesPopup, setShowNotesPopup] = useState(false);
 
   const canEdit = isAdmin || task.owner_id === currentUserId;
 
@@ -65,44 +63,15 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
     onUpdate({ files: updatedFiles });
   };
 
-  const handleNotesChange = (e) => {
-    const newValue = e.target.value;
-    setNotesValue(newValue);
-    
-    if (notesTimeout) clearTimeout(notesTimeout);
-    
-    const timeout = setTimeout(() => {
-      if (newValue !== task.notes) {
-        onUpdate({ notes: newValue });
-      }
-    }, 1000);
-    
-    setNotesTimeout(timeout);
-  };
-
-  const handleNotesBlur = () => {
-    if (notesTimeout) clearTimeout(notesTimeout);
-    if (notesValue !== task.notes) {
-      onUpdate({ notes: notesValue });
-    }
-    setNotesEditMode(false);
-  };
-
   const handleNotesClick = (e) => {
     if (!canEdit) return;
     e.stopPropagation();
-    setNotesEditMode(true);
+    setShowNotesPopup(true);
   };
 
-  React.useEffect(() => {
-    setNotesValue(task.notes || '');
-  }, [task.notes]);
-
-  React.useEffect(() => {
-    if (notesEditMode && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [notesEditMode]);
+  const handleSaveNotes = (notes) => {
+    onUpdate({ notes });
+  };
 
   return (
     <div 
@@ -284,21 +253,9 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
           onClick={handleNotesClick}
           className={`${canEdit ? 'cursor-pointer hover:bg-white hover:shadow-sm' : ''} rounded-lg px-3 py-2 transition-all duration-200 border border-transparent ${canEdit ? 'hover:border-indigo-200' : ''}`}
         >
-          {notesEditMode && canEdit ? (
-            <Textarea
-              ref={textareaRef}
-              value={notesValue}
-              onChange={handleNotesChange}
-              onBlur={handleNotesBlur}
-              placeholder="Type your notes here..."
-              className="min-h-[60px] max-h-[150px] resize-y text-sm border-indigo-300 focus:border-indigo-500"
-              rows={2}
-            />
-          ) : (
-            <div className="text-sm text-gray-700 whitespace-pre-wrap break-words min-h-[36px] flex items-center">
-              {notesValue ? notesValue : <span className="text-gray-400 italic text-xs">Click to add notes...</span>}
-            </div>
-          )}
+          <div className="text-sm text-gray-700 whitespace-pre-wrap break-words min-h-[36px] flex items-center">
+            {task.notes ? task.notes : <span className="text-gray-400 italic text-xs">Click to add notes...</span>}
+          </div>
         </div>
       )}
 
@@ -324,6 +281,14 @@ export default function TaskRow({ task, project, members, isAdmin, currentUserId
         taskName={task.task_name}
         canEdit={canEdit}
         onRemoveFile={handleRemoveFile}
+      />
+
+      {/* Notes Popup */}
+      <NotesPopup
+        open={showNotesPopup}
+        onClose={() => setShowNotesPopup(false)}
+        notes={task.notes || ''}
+        onSave={handleSaveNotes}
       />
     </div>
   );
