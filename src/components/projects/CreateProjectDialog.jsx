@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { X } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 const columnOptions = [
   { id: 'owner', label: 'Owner', description: 'Assign task to team member' },
