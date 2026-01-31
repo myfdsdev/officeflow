@@ -106,14 +106,12 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
   };
 
   const handleToggleMember = (user) => {
-    setTempSelectedMembers(prev => {
-      const isSelected = prev.find(m => m.id === user.id);
-      if (isSelected) {
-        return prev.filter(m => m.id !== user.id);
-      } else {
-        return [...prev, user];
-      }
-    });
+    const isSelected = tempSelectedMembers.find(m => m.id === user.id);
+    if (isSelected) {
+      setTempSelectedMembers(tempSelectedMembers.filter(m => m.id !== user.id));
+    } else {
+      setTempSelectedMembers([...tempSelectedMembers, user]);
+    }
   };
 
   const handleSaveMembers = () => {
@@ -245,14 +243,15 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
                 {filteredUsers.map(user => {
                   const isSelected = !!tempSelectedMembers.find(m => m.id === user.id);
                   return (
-                    <div
+                    <button
                       key={user.id}
+                      type="button"
                       onClick={() => handleToggleMember(user)}
-                      className="w-full p-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
+                      className="w-full p-3 hover:bg-gray-50 flex items-center gap-3 text-left transition-colors"
                     >
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={() => handleToggleMember(user)}
+                        onClick={(e) => e.stopPropagation()}
                       />
                       <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-medium text-sm shrink-0">
                         {user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -261,7 +260,7 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
                         <div className="font-medium text-sm">{user.full_name}</div>
                         <div className="text-xs text-gray-500 truncate">{user.email}</div>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
