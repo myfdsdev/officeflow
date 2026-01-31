@@ -31,6 +31,7 @@ import { useUserActivity } from './components/hooks/useUserActivity';
 import { useAutoCheckIn } from './components/hooks/useAutoCheckIn';
 import { useDesktopNotifications } from './components/hooks/useDesktopNotifications';
 import { useMessageDesktopNotifications } from './components/hooks/useMessageDesktopNotifications';
+import { useProjectNotifications } from './components/hooks/useProjectNotifications';
 import OnlineStatusIndicator from './components/admin/OnlineStatusIndicator';
 
 const employeeNavItems = [
@@ -75,6 +76,9 @@ export default function Layout({ children, currentPageName }) {
 
   // Enable message desktop notifications
   useMessageDesktopNotifications(user);
+
+  // Enable project assignment notifications
+  useProjectNotifications(user);
 
   const getInitials = (name) => {
     if (!name) return "?";
