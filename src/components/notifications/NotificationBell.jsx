@@ -112,7 +112,7 @@ export default function NotificationBell({ userEmail, notificationType = null })
                   </p>
                   <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    {format(new Date(notification.created_date), 'MMM d, h:mm a')}
+                    {new Date(notification.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
               </DropdownMenuItem>
