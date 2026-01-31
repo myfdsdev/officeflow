@@ -15,10 +15,11 @@ Deno.serve(async (req) => {
     // Create notification for the receiver
     await base44.asServiceRole.entities.Notification.create({
       user_email: message.receiver_email,
+      user_id: message.receiver_id,
       title: 'New Message',
       message: `${message.sender_name}: ${message.message_text.substring(0, 50)}${message.message_text.length > 50 ? '...' : ''}`,
-      type: 'check_in',
-      related_id: message.id,
+      type: 'new_message',
+      related_id: message.sender_id,
       is_read: false,
     });
 
