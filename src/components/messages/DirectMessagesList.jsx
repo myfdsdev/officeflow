@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { MessageCircle, ChevronDown, ChevronRight, Shield, User } from "lucide-react";
 import OnlineStatusIndicator from '../admin/OnlineStatusIndicator';
 import { formatDistanceToNow } from 'date-fns';
@@ -61,21 +61,21 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
 
     fetchUsers();
 
-    // Subscribe to real-time message updates to refresh user list
+    // Subscribe to real-time message updates to refresh unread counts only
     const messageUnsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create' || event.type === 'update') {
         const msg = event.data;
-        // If message involves current user, refresh the user list
+        // If message involves current user, update unread counts only
         if (currentUser && (msg.sender_id === currentUser.id || msg.receiver_id === currentUser.id)) {
-          fetchUsers();
+          fetchUnreadCounts(users);
         }
       }
     });
 
-    // Subscribe to real-time user updates to update user info
+    // Subscribe to real-time user updates only for new users
     const userUnsubscribe = base44.entities.User.subscribe((event) => {
-      if (event.type === 'update' || event.type === 'create') {
-        fetchUsers(); // Refresh to include new users
+      if (event.type === 'create') {
+        fetchUsers(); // Refresh only when new user is added
       }
     });
 
@@ -113,15 +113,11 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
   const admins = users.filter(u => u.role === 'admin');
   const teamMembers = users.filter(u => u.role === 'user');
 
-  const UserItem = ({ user, isCurrentUser }) => {
+  const UserItem = React.memo(({ user, isCurrentUser }) => {
     const unreadCount = unreadCounts[user.id] || 0;
     
     return (
-      <motion.button
-        key={user.id}
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -10 }}
+      <button
         onClick={() => onUserSelect(user)}
         className="group w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50 transition-colors text-left"
       >
@@ -159,9 +155,9 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
             Chat
           </div>
         )}
-      </motion.button>
+      </button>
     );
-  };
+  });
 
   return (
     <Card className="border-0 shadow-sm">
@@ -183,14 +179,8 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
         )}
       </div>
 
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+      {isExpanded && (
+          <div>
             <CardContent className="pt-0 space-y-4">
               {/* Admins Section */}
               {admins.length > 0 && (
@@ -211,15 +201,8 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
                     </Badge>
                   </button>
                   
-                  <AnimatePresence>
-                    {expandedSections.admins && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-1 mt-2"
-                      >
+                  {expandedSections.admins && (
+                      <div className="space-y-1 mt-2">
                         {admins.map(admin => (
                           <UserItem 
                             key={admin.id} 
@@ -227,9 +210,8 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
                             isCurrentUser={admin.email === currentUser?.email}
                           />
                         ))}
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
                 </div>
               )}
 
@@ -252,15 +234,8 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
                     </Badge>
                   </button>
                   
-                  <AnimatePresence>
-                    {expandedSections.team && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-1 mt-2"
-                      >
+                  {expandedSections.team && (
+                      <div className="space-y-1 mt-2">
                         {teamMembers.map(member => (
                           <UserItem 
                             key={member.id} 
@@ -268,9 +243,8 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
                             isCurrentUser={member.email === currentUser?.email}
                           />
                         ))}
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
                 </div>
               )}
 
@@ -286,9 +260,8 @@ export default function DirectMessagesList({ currentUser, onUserSelect }) {
                 </div>
               )}
             </CardContent>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </Card>
   );
 }
