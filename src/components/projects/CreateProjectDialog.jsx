@@ -76,17 +76,8 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['project-members'] });
       
-      // Navigate to project board
-      navigate(createPageUrl('ProjectBoard') + `?projectId=${project.id}`);
-      
-      // Reset form
-      setFormData({
-        project_name: '',
-        enabled_columns: ['owner', 'status', 'due_date', 'priority', 'notes'],
-        color: '#6366f1',
-      });
-      setSelectedMembers([]);
-      setMemberSearch('');
+      // Navigate to project board with Add Task dialog open
+      navigate(createPageUrl('ProjectBoard') + `?projectId=${project.id}&openAddTask=true`);
       onClose();
     },
   });
