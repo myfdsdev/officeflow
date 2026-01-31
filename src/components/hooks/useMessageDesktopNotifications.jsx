@@ -70,31 +70,18 @@ export function useMessageDesktopNotifications(user) {
 
               notif.onclick = async () => {
                 window.focus();
-                
                 // Mark notification as read
                 await base44.entities.Notification.filter({
                   user_email: user.email,
                   type: 'new_message',
                   is_read: false
                 }).then(notifs => {
-                  const relatedNotif = notifs.find(n => n.related_id === message.id);
+                  const relatedNotif = notifs.find(n => n.related_id === message.sender_id);
                   if (relatedNotif) {
                     base44.entities.Notification.update(relatedNotif.id, { is_read: true });
                   }
                 });
-                
-                // Mark message as read
-                await base44.entities.Message.update(message.id, { is_read: true });
-                
-                // Store sender info in localStorage for DirectMessages page to auto-select
-                localStorage.setItem('dm_auto_select', JSON.stringify({
-                  userId: message.sender_id,
-                  userName: message.sender_name,
-                  userEmail: message.sender_email,
-                  timestamp: Date.now()
-                }));
-                
-                // Navigate to DirectMessages page
+                // Navigate to DirectMessages page (user will select from sidebar)
                 window.location.href = '/DirectMessages';
                 notif.close();
               };
@@ -157,28 +144,19 @@ export function useMessageDesktopNotifications(user) {
 
                 notif.onclick = async () => {
                   window.focus();
-                  
                   // Mark notification as read
                   await base44.entities.Notification.filter({
                     user_email: user.email,
                     type: 'new_message',
                     is_read: false
                   }).then(notifs => {
-                    const relatedNotif = notifs.find(n => n.related_id === message.id);
+                    const relatedNotif = notifs.find(n => n.related_id === message.group_id);
                     if (relatedNotif) {
                       base44.entities.Notification.update(relatedNotif.id, { is_read: true });
                     }
                   });
-                  
-                  // Store group info in localStorage for DirectMessages page to auto-select
-                  localStorage.setItem('dm_auto_select_group', JSON.stringify({
-                    groupId: message.group_id,
-                    groupName: message.group_name,
-                    timestamp: Date.now()
-                  }));
-                  
-                  // Navigate to DirectMessages page
-                  window.location.href = '/DirectMessages';
+                  // Navigate to Groups page (user will select from sidebar)
+                  window.location.href = '/Groups';
                   notif.close();
                 };
                 
