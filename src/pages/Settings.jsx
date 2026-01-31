@@ -44,10 +44,22 @@ export default function Settings() {
       await base44.auth.updateMe({
         office_start_time: settings.office_start_time,
         office_end_time: settings.office_end_time,
-        late_threshold_minutes: settings.late_threshold_minutes,
-        half_day_hours: settings.half_day_hours,
+        late_threshold_minutes: Number(settings.late_threshold_minutes),
+        half_day_hours: Number(settings.half_day_hours),
         working_days: settings.working_days,
       });
+      
+      // Refetch user data to confirm save
+      const updatedUser = await base44.auth.me();
+      setUser(updatedUser);
+      setSettings({
+        office_start_time: updatedUser.office_start_time || '09:00',
+        office_end_time: updatedUser.office_end_time || '18:00',
+        late_threshold_minutes: updatedUser.late_threshold_minutes || 15,
+        half_day_hours: updatedUser.half_day_hours || 4,
+        working_days: updatedUser.working_days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+      });
+      
       setSaving(false);
       alert('Settings saved successfully!');
     } catch (error) {

@@ -75,6 +75,48 @@ export default function DirectMessages() {
     
     initUser();
   }, [queryClient]);
+  
+  // Auto-select conversation from notification click
+  useEffect(() => {
+    if (!user) return;
+    
+    // Check for direct message auto-select
+    const dmAutoSelect = localStorage.getItem('dm_auto_select');
+    if (dmAutoSelect) {
+      try {
+        const dmData = JSON.parse(dmAutoSelect);
+        // Check if timestamp is recent (within last 5 seconds)
+        if (Date.now() - dmData.timestamp < 5000) {
+          setSelectedUser({
+            id: dmData.userId,
+            full_name: dmData.userName,
+            email: dmData.userEmail
+          });
+        }
+        localStorage.removeItem('dm_auto_select');
+      } catch (error) {
+        console.error('Failed to parse dm_auto_select:', error);
+      }
+    }
+    
+    // Check for group auto-select
+    const groupAutoSelect = localStorage.getItem('dm_auto_select_group');
+    if (groupAutoSelect) {
+      try {
+        const groupData = JSON.parse(groupAutoSelect);
+        // Check if timestamp is recent (within last 5 seconds)
+        if (Date.now() - groupData.timestamp < 5000) {
+          setSelectedGroup({
+            id: groupData.groupId,
+            group_name: groupData.groupName
+          });
+        }
+        localStorage.removeItem('dm_auto_select_group');
+      } catch (error) {
+        console.error('Failed to parse dm_auto_select_group:', error);
+      }
+    }
+  }, [user]);
 
   // Fetch messages for the selected conversation
   const { data: allConversationMessages = [], isLoading: loadingMessages, error: messagesError, refetch } = useQuery({
