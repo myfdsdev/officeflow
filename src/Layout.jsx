@@ -67,8 +67,8 @@ export default function Layout({ children, currentPageName }) {
   // Track user activity and update online status
   useUserActivity(user);
 
-  // Auto check-in enabled on app start
-  useAutoCheckIn(user);
+  // Manual check-in/check-out only - auto check-in disabled
+  // useAutoCheckIn(user);
 
   // Enable desktop notifications
   useDesktopNotifications(user);

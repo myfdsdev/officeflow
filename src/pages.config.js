@@ -54,7 +54,6 @@ import AttendanceReports from './pages/AttendanceReports';
 import Checkout from './pages/Checkout';
 import CompleteProfile from './pages/CompleteProfile';
 import Dashboard from './pages/Dashboard';
-import DirectMessages from './pages/DirectMessages';
 import EmployeeDetails from './pages/EmployeeDetails';
 import Groups from './pages/Groups';
 import LeaveRequests from './pages/LeaveRequests';
@@ -65,6 +64,7 @@ import ProjectBoard from './pages/ProjectBoard';
 import Projects from './pages/Projects';
 import Settings from './pages/Settings';
 import Welcome from './pages/Welcome';
+import DirectMessages from './pages/DirectMessages';
 import __Layout from './Layout.jsx';
 
 
@@ -76,7 +76,6 @@ export const PAGES = {
     "Checkout": Checkout,
     "CompleteProfile": CompleteProfile,
     "Dashboard": Dashboard,
-    "DirectMessages": DirectMessages,
     "EmployeeDetails": EmployeeDetails,
     "Groups": Groups,
     "LeaveRequests": LeaveRequests,
@@ -87,6 +86,7 @@ export const PAGES = {
     "Projects": Projects,
     "Settings": Settings,
     "Welcome": Welcome,
+    "DirectMessages": DirectMessages,
 }
 
 export const pagesConfig = {

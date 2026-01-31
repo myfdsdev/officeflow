@@ -35,9 +35,6 @@ export function useDesktopNotifications(user) {
           return;
         }
         
-        // Show desktop notification for project/group added
-        const isProjectOrGroup = notification.type === 'project_added' || notification.type === 'group_added';
-        
         if (Notification.permission === 'granted') {
           // Create notification options
           const options = {
@@ -76,8 +73,6 @@ export function useDesktopNotifications(user) {
               window.location.href = '/DirectMessages';
             } else if (notification.type === 'group_added') {
               window.location.href = '/Groups';
-            } else if (notification.type === 'project_added') {
-              window.location.href = '/Projects';
             }
             
             desktopNotif.close();

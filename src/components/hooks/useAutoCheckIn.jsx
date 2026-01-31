@@ -83,16 +83,6 @@ export function useAutoCheckIn(user) {
         localStorage.setItem(`last_checkin_${user.id}`, today);
         console.log('Auto check-in successful:', checkInTime);
         
-        // Create attendance session
-        await base44.entities.AttendanceSession.create({
-          attendance_id: attendanceId,
-          employee_id: user.id,
-          employee_email: user.email,
-          date: today,
-          check_in_time: checkInTime,
-          is_active: true
-        });
-        
         // Notify admin
         if (user.role !== 'admin') {
           const admins = await base44.entities.User.filter({ role: 'admin' });
