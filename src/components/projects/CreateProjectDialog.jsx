@@ -31,8 +31,9 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
     color: '#6366f1',
   });
   const [selectedMembers, setSelectedMembers] = useState([]);
-  const [memberSearchOpen, setMemberSearchOpen] = useState(false);
+  const [memberPopupOpen, setMemberPopupOpen] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');
+  const [tempSelectedMembers, setTempSelectedMembers] = useState([]);
 
   const queryClient = useQueryClient();
   const navigate = useNavigate();
