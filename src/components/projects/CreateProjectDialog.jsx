@@ -45,20 +45,48 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
   });
 
   const createProjectMutation = useMutation({
-    mutationFn: (data) => base44.entities.Project.create({
-      ...data,
-      created_by: currentUser.id,
-      created_by_name: currentUser.full_name,
-    }),
-    onSuccess: () => {
+    mutationFn: async (data) => {
+      // Create project
+      const project = await base44.entities.Project.create({
+        ...data,
+        created_by: currentUser.id,
+        created_by_name: currentUser.full_name,
+      });
+
+      // Add selected members to project
+      if (selectedMembers.length > 0) {
+        await Promise.all(
+          selectedMembers.map(member =>
+            base44.entities.ProjectMember.create({
+              project_id: project.id,
+              project_name: project.project_name,
+              user_id: member.id,
+              user_email: member.email,
+              user_name: member.full_name,
+              added_by: currentUser.id,
+            })
+          )
+        );
+      }
+
+      return project;
+    },
+    onSuccess: (project) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      onClose();
+      queryClient.invalidateQueries({ queryKey: ['project-members'] });
+      
+      // Navigate to project board
+      navigate(createPageUrl('ProjectBoard') + `?projectId=${project.id}`);
+      
+      // Reset form
       setFormData({
         project_name: '',
-        description: '',
-        enabled_columns: ['owner', 'status', 'due_date', 'priority'],
+        enabled_columns: ['owner', 'status', 'due_date', 'priority', 'notes'],
         color: '#6366f1',
       });
+      setSelectedMembers([]);
+      setMemberSearch('');
+      onClose();
     },
   });
 
