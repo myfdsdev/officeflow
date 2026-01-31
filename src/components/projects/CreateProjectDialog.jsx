@@ -237,7 +237,7 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
               Cancel
             </Button>
             <Button type="submit" disabled={createProjectMutation.isPending}>
-              {createProjectMutation.isPending ? 'Creating...' : 'Create Project'}
+              {createProjectMutation.isPending ? 'Creating...' : 'Next'}
             </Button>
           </div>
         </form>
