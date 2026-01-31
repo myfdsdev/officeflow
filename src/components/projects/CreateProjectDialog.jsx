@@ -27,12 +27,22 @@ const colors = [
 export default function CreateProjectDialog({ open, onClose, currentUser }) {
   const [formData, setFormData] = useState({
     project_name: '',
-    description: '',
-    enabled_columns: ['owner', 'status', 'due_date', 'priority'],
+    enabled_columns: ['owner', 'status', 'due_date', 'priority', 'notes'],
     color: '#6366f1',
   });
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [memberSearchOpen, setMemberSearchOpen] = useState(false);
+  const [memberSearch, setMemberSearch] = useState('');
 
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  // Fetch all users for member selection
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['all-users'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: open,
+  });
 
   const createProjectMutation = useMutation({
     mutationFn: (data) => base44.entities.Project.create({
