@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
-import { FileSpreadsheet, Pencil, Search } from "lucide-react";
+import { FileSpreadsheet, Pencil } from "lucide-react";
 
 const statusStyles = {
   present: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -20,15 +20,9 @@ const statusStyles = {
 };
 
 export default function AttendanceReportTable({ attendance, onEdit, isEditing }) {
-  const [searchTerm, setSearchTerm] = useState("");
   const [editDialog, setEditDialog] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [editData, setEditData] = useState({});
-
-  const filteredAttendance = attendance.filter(record =>
-    record.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.employee_email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleEditClick = (record) => {
     setSelectedRecord(record);
@@ -50,21 +44,10 @@ export default function AttendanceReportTable({ attendance, onEdit, isEditing })
     <>
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
-              Attendance Report
-            </CardTitle>
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search employees..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
+            Attendance Report
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -81,14 +64,14 @@ export default function AttendanceReportTable({ attendance, onEdit, isEditing })
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAttendance.length === 0 ? (
+                {attendance.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-gray-400">
                       No attendance records found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredAttendance.map((record, index) => (
+                  attendance.map((record, index) => (
                     <motion.tr
                       key={record.id}
                       initial={{ opacity: 0 }}
