@@ -546,13 +546,13 @@ export default function Dashboard() {
         <AlertDialog open={showCheckoutConfirm} onOpenChange={setShowCheckoutConfirm}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Check Out की पुष्टि करें</AlertDialogTitle>
+              <AlertDialogTitle>Confirm Check Out</AlertDialogTitle>
               <AlertDialogDescription>
-                क्या आप वाकई चेक आउट करना चाहते हैं? यह आपके आज के काम का समय दर्ज कर देगा।
+                Are you sure you want to check out? This will record your work time for today.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>रद्द करें</AlertDialogCancel>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
                   setShowCheckoutConfirm(false);
@@ -560,7 +560,7 @@ export default function Dashboard() {
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
-                हाँ, Check Out करें
+                Yes, Check Out
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
