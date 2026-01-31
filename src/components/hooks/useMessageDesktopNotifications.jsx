@@ -17,18 +17,19 @@ export function useMessageDesktopNotifications(user) {
     // Helper to check if user is in active chat
     const isInActiveChat = (senderId, groupId) => {
       const currentPath = window.location.pathname;
-      const currentUrl = window.location.href;
       
-      // Check if in Direct Messages page with this sender
-      if (currentPath.includes('DirectMessages') && senderId) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const activeUserId = urlParams.get('userId');
-        return activeUserId === senderId;
+      // Check if in Direct Messages page - users select from sidebar, no URL params
+      // If on DirectMessages page, we can't easily detect active user without state
+      // So we'll check if window is focused - if focused on DM page, likely reading
+      if (currentPath.includes('DirectMessages') && senderId && document.hasFocus()) {
+        // User is on DM page and window is focused, likely in active conversation
+        return true;
       }
       
       // Check if in Groups page with this group
-      if (currentPath.includes('Groups') && groupId) {
-        return currentUrl.includes(groupId);
+      if (currentPath.includes('Groups') && groupId && document.hasFocus()) {
+        // User is on Groups page and window is focused, likely in active conversation
+        return true;
       }
       
       return false;
@@ -80,7 +81,8 @@ export function useMessageDesktopNotifications(user) {
                     base44.entities.Notification.update(relatedNotif.id, { is_read: true });
                   }
                 });
-                window.location.href = `/DirectMessages?userId=${message.sender_id}`;
+                // Navigate to DirectMessages page (user will select from sidebar)
+                window.location.href = '/DirectMessages';
                 notif.close();
               };
               
@@ -123,8 +125,13 @@ export function useMessageDesktopNotifications(user) {
           }).then(members => {
             if (members && members.length > 0 && Notification.permission === 'granted') {
               console.log('✅ Creating group notification NOW...');
+              
+              // Check if it's a broadcast message
+              const isBroadcast = message.message_text.startsWith('📢 BROADCAST:');
+              const title = isBroadcast ? '📢 Admin Broadcast' : '👥 Group Message';
+              
               try {
-                const notif = new Notification('👥 Group Message', {
+                const notif = new Notification(title, {
                   body: `${message.group_name}\n${message.sender_name}: ${message.message_text.substring(0, 100)}`,
                   icon: '/logo.png',
                   tag: `group-${message.id}`,
@@ -148,7 +155,8 @@ export function useMessageDesktopNotifications(user) {
                       base44.entities.Notification.update(relatedNotif.id, { is_read: true });
                     }
                   });
-                  window.location.href = `/Groups?groupId=${message.group_id}`;
+                  // Navigate to Groups page (user will select from sidebar)
+                  window.location.href = '/Groups';
                   notif.close();
                 };
                 
