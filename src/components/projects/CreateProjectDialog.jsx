@@ -250,7 +250,7 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
             ) : (
               <div className="divide-y">
                 {filteredUsers.map(user => {
-                  const isSelected = tempSelectedMembers.find(m => m.id === user.id);
+                  const isSelected = !!tempSelectedMembers.find(m => m.id === user.id);
                   return (
                     <button
                       key={user.id}
@@ -260,7 +260,7 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
                     >
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={() => handleToggleMember(user)}
+                        onClick={(e) => e.stopPropagation()}
                       />
                       <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-medium text-sm shrink-0">
                         {user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
