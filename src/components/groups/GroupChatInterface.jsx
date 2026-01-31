@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Send, MoreVertical, Trash2 } from "lucide-react";
+import { Send, MoreVertical, Trash2, Info } from "lucide-react";
+import GroupInfoDialog from './GroupInfoDialog';
 import { format, parseISO } from 'date-fns';
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ export default function GroupChatInterface({ group, currentUser }) {
   const groupId = group?.id;
   const [messageText, setMessageText] = useState('');
   const [typingUsers, setTypingUsers] = useState([]);
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -104,16 +106,26 @@ export default function GroupChatInterface({ group, currentUser }) {
     <div className="flex flex-col h-[600px] bg-white rounded-xl border border-gray-200 shadow-sm">
       {/* Group Header */}
       <div className="p-4 border-b bg-white rounded-t-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-            <span className="text-emerald-600 font-semibold text-sm">
-              {getInitials(group?.group_name)}
-            </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+              <span className="text-emerald-600 font-semibold text-sm">
+                {getInitials(group?.group_name)}
+              </span>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">{group?.group_name}</h3>
+              <p className="text-xs text-gray-500">{group?.group_type}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-900">{group?.group_name}</h3>
-            <p className="text-xs text-gray-500">{group?.group_type}</p>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowGroupInfo(true)}
+            className="text-gray-600 hover:text-emerald-600"
+          >
+            <Info className="w-5 h-5" />
+          </Button>
         </div>
       </div>
 
@@ -220,6 +232,13 @@ export default function GroupChatInterface({ group, currentUser }) {
           </Button>
         </form>
       </div>
+
+      {/* Group Info Dialog */}
+      <GroupInfoDialog
+        open={showGroupInfo}
+        onClose={() => setShowGroupInfo(false)}
+        group={group}
+      />
     </div>
   );
 }
