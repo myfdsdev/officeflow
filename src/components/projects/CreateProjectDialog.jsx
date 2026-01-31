@@ -104,6 +104,23 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
     }));
   };
 
+  const handleAddMember = (user) => {
+    if (!selectedMembers.find(m => m.id === user.id)) {
+      setSelectedMembers([...selectedMembers, user]);
+    }
+    setMemberSearch('');
+    setMemberSearchOpen(false);
+  };
+
+  const handleRemoveMember = (userId) => {
+    setSelectedMembers(selectedMembers.filter(m => m.id !== userId));
+  };
+
+  const filteredUsers = allUsers.filter(user => 
+    user.full_name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
+    user.email?.toLowerCase().includes(memberSearch.toLowerCase())
+  ).filter(user => !selectedMembers.find(m => m.id === user.id));
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
