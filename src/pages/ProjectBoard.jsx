@@ -18,10 +18,21 @@ export default function ProjectBoardPage() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const projectId = urlParams.get('projectId');
+  const openAddTask = urlParams.get('openAddTask');
 
   useEffect(() => {
     base44.auth.me().then(setUser);
   }, []);
+
+  // Auto-open Add Task dialog if URL parameter is present
+  useEffect(() => {
+    if (openAddTask === 'true' && project && user) {
+      setShowAddTask(true);
+      // Remove the parameter from URL
+      const newUrl = window.location.pathname + '?projectId=' + projectId;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [openAddTask, project, user, projectId]);
 
   useEffect(() => {
     if (projectId) {
