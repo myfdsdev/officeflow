@@ -140,13 +140,61 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
           </div>
 
           <div>
-            <Label>Description</Label>
-            <Textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Brief project description"
-              rows={3}
-            />
+            <Label>Add Members</Label>
+            <div className="mt-2 border rounded-lg p-2 bg-white">
+              {/* Selected Members */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {selectedMembers.map(member => (
+                  <div 
+                    key={member.id} 
+                    className="flex items-center gap-1 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm"
+                  >
+                    <span>{member.full_name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMember(member.id)}
+                      className="hover:bg-indigo-200 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Search Input */}
+              <Input
+                value={memberSearch}
+                onChange={(e) => {
+                  setMemberSearch(e.target.value);
+                  setMemberSearchOpen(true);
+                }}
+                onFocus={() => setMemberSearchOpen(true)}
+                placeholder="Search and select members..."
+                className="border-0 focus-visible:ring-0 px-2 h-8"
+              />
+
+              {/* Dropdown */}
+              {memberSearchOpen && filteredUsers.length > 0 && (
+                <div className="mt-2 border rounded-lg bg-white shadow-lg max-h-48 overflow-y-auto">
+                  {filteredUsers.map(user => (
+                    <button
+                      key={user.id}
+                      type="button"
+                      onClick={() => handleAddMember(user)}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-medium text-xs">
+                        {user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <div>
+                        <div className="font-medium">{user.full_name}</div>
+                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
