@@ -14,15 +14,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function GroupChatInterface({ groupId, currentUser }) {
+export default function GroupChatInterface({ group, currentUser }) {
+  const groupId = group?.id;
   const [messageText, setMessageText] = useState('');
   const [typingUsers, setTypingUsers] = useState([]);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
-  const { data: messages = [] } = useQuery({
+  const { data: messages = [], isLoading } = useQuery({
     queryKey: ['group-messages', groupId],
-    queryFn: () => base44.entities.GroupMessage.filter({ group_id: groupId }, '-created_date', 100),
+    queryFn: async () => {
+      if (!groupId) return [];
+      const msgs = await base44.entities.GroupMessage.filter({ group_id: groupId }, '-created_date', 100);
+      return msgs.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    },
     enabled: !!groupId,
   });
 
@@ -46,17 +51,23 @@ export default function GroupChatInterface({ groupId, currentUser }) {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (text) => {
-      return base44.entities.GroupMessage.create({
+      if (!groupId) throw new Error('No group selected');
+      
+      return await base44.entities.GroupMessage.create({
         group_id: groupId,
+        group_name: group?.group_name || '',
         sender_id: currentUser.id,
         sender_email: currentUser.email,
         sender_name: currentUser.full_name,
         message_text: text,
+        is_edited: false,
+        is_deleted: false,
       });
     },
     onSuccess: () => {
       setMessageText('');
       queryClient.invalidateQueries({ queryKey: ['group-messages', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['all-group-messages'] });
     },
   });
 
@@ -90,11 +101,41 @@ export default function GroupChatInterface({ groupId, currentUser }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl border border-gray-200">
+    <div className="flex flex-col h-[600px] bg-white rounded-xl border border-gray-200 shadow-sm">
+      {/* Group Header */}
+      <div className="p-4 border-b bg-white rounded-t-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+            <span className="text-emerald-600 font-semibold text-sm">
+              {getInitials(group?.group_name)}
+            </span>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900">{group?.group_name}</h3>
+            <p className="text-xs text-gray-500">{group?.group_type}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <AnimatePresence>
-          {visibleMessages.map((message, index) => (
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-pulse text-gray-400">Loading messages...</div>
+          </div>
+        ) : visibleMessages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Send className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-400 font-medium">No messages yet</p>
+              <p className="text-sm text-gray-400 mt-1">Start the conversation!</p>
+            </div>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {visibleMessages.map((message, index) => (
             <motion.div
               key={message.id}
               initial={{ opacity: 0, y: 10 }}
@@ -103,13 +144,13 @@ export default function GroupChatInterface({ groupId, currentUser }) {
               className={`flex gap-3 ${message.sender_id === currentUser.id ? 'justify-end' : 'justify-start'}`}
             >
               {message.sender_id !== currentUser.id && (
-                <Avatar className="w-8 h-8 bg-indigo-100 text-indigo-600 flex-shrink-0">
+                <Avatar className="w-8 h-8 bg-emerald-100 text-emerald-600 flex-shrink-0">
                   <AvatarFallback className="text-xs font-bold">
                     {getInitials(message.sender_name)}
                   </AvatarFallback>
                 </Avatar>
               )}
-              <div className={`max-w-xs ${message.sender_id === currentUser.id ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+              <div className={`max-w-[70%] ${message.sender_id === currentUser.id ? 'items-end' : 'items-start'} flex flex-col gap-1 group`}>
                 {message.sender_id !== currentUser.id && (
                   <p className="text-xs font-medium text-gray-600">{message.sender_name}</p>
                 )}
@@ -127,7 +168,7 @@ export default function GroupChatInterface({ groupId, currentUser }) {
                     </p>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 ${message.sender_id === currentUser.id ? 'justify-end' : 'justify-start'}`}>
                   <p className="text-xs text-gray-400">
                     {format(parseISO(message.created_date), 'HH:mm')}
                   </p>
@@ -152,13 +193,14 @@ export default function GroupChatInterface({ groupId, currentUser }) {
                 </div>
               </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
+            ))}
+          </AnimatePresence>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input */}
-      <div className="border-t border-gray-200 p-4">
+      <div className="border-t border-gray-200 p-4 bg-white rounded-b-xl">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <Input
             placeholder="Type a message..."
