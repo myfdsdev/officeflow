@@ -16,22 +16,8 @@ export function useMessageDesktopNotifications(user) {
 
     // Helper to check if user is in active chat
     const isInActiveChat = (senderId, groupId) => {
-      const currentPath = window.location.pathname;
-      
-      // Check if in Direct Messages page - users select from sidebar, no URL params
-      // If on DirectMessages page, we can't easily detect active user without state
-      // So we'll check if window is focused - if focused on DM page, likely reading
-      if (currentPath.includes('DirectMessages') && senderId && document.hasFocus()) {
-        // User is on DM page and window is focused, likely in active conversation
-        return true;
-      }
-      
-      // Check if in Groups page with this group
-      if (currentPath.includes('Groups') && groupId && document.hasFocus()) {
-        // User is on Groups page and window is focused, likely in active conversation
-        return true;
-      }
-      
+      // Never suppress notifications - always show them
+      // User can dismiss if they're actively chatting
       return false;
     };
 
