@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { format } from 'date-fns';
+
 
 export default function NotificationBell({ userEmail, notificationType = null }) {
   const queryClient = useQueryClient();
