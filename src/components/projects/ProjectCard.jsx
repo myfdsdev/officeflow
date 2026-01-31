@@ -144,7 +144,7 @@ export default function ProjectCard({ project, onOpen, onDelete, isAdmin }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Project</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete this project? This will also delete all tasks associated with it. This action cannot be undone.
+            Are you sure you want to delete this project?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
