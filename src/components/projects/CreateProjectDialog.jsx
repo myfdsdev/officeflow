@@ -226,5 +226,78 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Member Selection Popup */}
+    <Dialog open={memberPopupOpen} onOpenChange={setMemberPopupOpen}>
+      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Add Members</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
+          {/* Search Input */}
+          <Input
+            value={memberSearch}
+            onChange={(e) => setMemberSearch(e.target.value)}
+            placeholder="Search members..."
+            className="w-full"
+          />
+
+          {/* Members List */}
+          <div className="flex-1 overflow-y-auto border rounded-lg">
+            {filteredUsers.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">No members found</div>
+            ) : (
+              <div className="divide-y">
+                {filteredUsers.map(user => {
+                  const isSelected = tempSelectedMembers.find(m => m.id === user.id);
+                  return (
+                    <button
+                      key={user.id}
+                      type="button"
+                      onClick={() => handleToggleMember(user)}
+                      className="w-full p-3 hover:bg-gray-50 flex items-center gap-3 text-left transition-colors"
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => handleToggleMember(user)}
+                      />
+                      <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-medium text-sm shrink-0">
+                        {user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm">{user.full_name}</div>
+                        <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setMemberPopupOpen(false);
+                setMemberSearch('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveMembers}
+            >
+              Done ({tempSelectedMembers.length})
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>
   );
 }
