@@ -298,6 +298,6 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
         </div>
       </DialogContent>
     </Dialog>
-  </>
+    </>
   );
 }
