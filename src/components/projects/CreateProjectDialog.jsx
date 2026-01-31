@@ -247,12 +247,8 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
                       key={user.id}
                       type="button"
                       onClick={() => handleToggleMember(user)}
-                      className="w-full p-3 hover:bg-gray-50 flex items-center gap-3 text-left transition-colors"
+                      className={`w-full p-3 hover:bg-gray-50 flex items-center gap-3 text-left transition-colors ${isSelected ? 'bg-indigo-50 border-l-4 border-indigo-600' : ''}`}
                     >
-                      <Checkbox
-                        checked={isSelected}
-                        onClick={(e) => e.stopPropagation()}
-                      />
                       <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-medium text-sm shrink-0">
                         {user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </div>
