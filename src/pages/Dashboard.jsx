@@ -166,10 +166,21 @@ export default function Dashboard() {
         status: status,
         has_active_session: true,
       });
+      
+      // Create attendance session
+      await base44.entities.AttendanceSession.create({
+        attendance_id: attendance.id,
+        employee_id: user.id,
+        employee_email: user.email,
+        date: today,
+        check_in_time: new Date().toISOString(),
+        is_active: true
+      });
 
       // Send success notification to employee
       await base44.entities.Notification.create({
         user_email: user.email,
+        user_id: user.id,
         title: 'Check-in Successful',
         message: `You checked in at ${clockInTime}${status === 'late' ? ' (Late Entry)' : ''}`,
         type: 'check_in',
@@ -180,6 +191,7 @@ export default function Dashboard() {
       if (status === 'late') {
         await base44.entities.Notification.create({
           user_email: user.email,
+          user_id: user.id,
           title: 'Late Entry Alert',
           message: `Your check-in at ${clockInTime} is after office time. Please contact HR if needed.`,
           type: 'check_in',
@@ -194,6 +206,7 @@ export default function Dashboard() {
       for (const admin of admins) {
         await base44.entities.Notification.create({
           user_email: admin.email,
+          user_id: admin.id,
           title: 'Employee Checked In',
           message: `${user.full_name} has checked in at ${clockInTime} (${status})`,
           type: 'check_in',
@@ -215,19 +228,57 @@ export default function Dashboard() {
   const clockOutMutation = useMutation({
     mutationFn: async () => {
       const now = new Date();
-      const checkIn = new Date(todayAttendance.first_check_in);
-      const workHours = (now - checkIn) / (1000 * 60 * 60);
       
-      // Determine final status based on work hours
-      // If less than 4 hours → Half Day
+      // Get all sessions for today to calculate total work hours
+      const sessions = await base44.entities.AttendanceSession.filter({
+        employee_id: user.id,
+        date: today
+      });
+      
+      // Close all active sessions
+      for (const session of sessions) {
+        if (session.is_active) {
+          const sessionCheckIn = new Date(session.check_in_time);
+          const sessionDuration = (now - sessionCheckIn) / (1000 * 60 * 60);
+          
+          await base44.entities.AttendanceSession.update(session.id, {
+            check_out_time: now.toISOString(),
+            session_duration: sessionDuration,
+            is_active: false,
+            check_out_reason: 'manual'
+          });
+        }
+      }
+      
+      // Recalculate total work hours from all sessions
+      const allSessions = await base44.entities.AttendanceSession.filter({
+        employee_id: user.id,
+        date: today
+      });
+      
+      const totalWorkHours = allSessions.reduce((sum, s) => {
+        if (s.session_duration) {
+          return sum + s.session_duration;
+        }
+        return sum;
+      }, 0);
+      
+      // Determine final status
+      // 9+ hours = present (no late, no half-day)
+      // 4-9 hours = half_day
+      // < 4 hours = half_day
       let finalStatus = todayAttendance.status;
-      if (workHours < 4) {
+      if (totalWorkHours >= 9) {
+        finalStatus = 'present'; // Full day completed
+      } else if (totalWorkHours >= 4) {
+        finalStatus = 'half_day';
+      } else {
         finalStatus = 'half_day';
       }
       
       const updated = await base44.entities.Attendance.update(todayAttendance.id, {
         last_check_out: now.toISOString(),
-        total_work_hours: workHours,
+        total_work_hours: totalWorkHours,
         status: finalStatus,
         has_active_session: false,
       });
@@ -236,8 +287,9 @@ export default function Dashboard() {
       const clockOutTimeStr = format(now, 'HH:mm');
       await base44.entities.Notification.create({
         user_email: user.email,
+        user_id: user.id,
         title: 'Check-out Successful',
-        message: `You checked out at ${clockOutTimeStr}. Total work hours: ${workHours.toFixed(1)}hrs`,
+        message: `You checked out at ${clockOutTimeStr}. Total work hours: ${totalWorkHours.toFixed(1)}hrs`,
         type: 'check_in',
         related_id: todayAttendance.id,
       });
