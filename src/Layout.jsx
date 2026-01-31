@@ -117,7 +117,7 @@ export default function Layout({ children, currentPageName }) {
                     }`}
                   >
                     <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-                    <span className={item.name === 'Direct Messages' ? 'flex-1 mr-8' : 'flex-1'}>{item.name}</span>
+                    <span className={`flex-1 whitespace-nowrap ${item.name === 'Direct Messages' ? 'mr-8' : ''}`}>{item.name}</span>
                     {item.name === 'Direct Messages' && user && (
                       <div className="pointer-events-auto">
                         <NotificationBell userEmail={user.email} notificationType="new_message" />
@@ -156,7 +156,7 @@ export default function Layout({ children, currentPageName }) {
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-                  <span className={item.name === 'Direct Messages' ? 'flex-1 mr-8' : 'flex-1'}>{item.name}</span>
+                  <span className={`flex-1 whitespace-nowrap ${item.name === 'Direct Messages' ? 'mr-8' : ''}`}>{item.name}</span>
                   {item.name === 'Direct Messages' && user && (
                     <div className="pointer-events-auto">
                       <NotificationBell userEmail={user.email} notificationType="new_message" />
@@ -176,7 +176,7 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen bg-gray-50">
       <NotificationPermissionPrompt />
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-100 p-4">
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-72 bg-white border-r border-gray-100 p-4">
         <div className="flex items-center gap-3 px-4 py-4 mb-6">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
             <Clock className="w-6 h-6 text-white" />
@@ -291,7 +291,7 @@ export default function Layout({ children, currentPageName }) {
       </header>
 
       {/* Main Content */}
-      <main className="lg:ml-64 pt-16 lg:pt-0">
+      <main className="lg:ml-72 pt-16 lg:pt-0">
         <div className="min-h-screen">
           {children}
         </div>
