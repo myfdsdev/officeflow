@@ -106,12 +106,14 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
   };
 
   const handleToggleMember = (user) => {
-    const isSelected = tempSelectedMembers.find(m => m.id === user.id);
-    if (isSelected) {
-      setTempSelectedMembers(tempSelectedMembers.filter(m => m.id !== user.id));
-    } else {
-      setTempSelectedMembers([...tempSelectedMembers, user]);
-    }
+    setTempSelectedMembers(prev => {
+      const isSelected = prev.find(m => m.id === user.id);
+      if (isSelected) {
+        return prev.filter(m => m.id !== user.id);
+      } else {
+        return [...prev, user];
+      }
+    });
   };
 
   const handleSaveMembers = () => {
