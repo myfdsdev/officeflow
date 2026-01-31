@@ -105,22 +105,34 @@ export default function CreateProjectDialog({ open, onClose, currentUser }) {
     }));
   };
 
-  const handleAddMember = (user) => {
-    if (!selectedMembers.find(m => m.id === user.id)) {
-      setSelectedMembers([...selectedMembers, user]);
-    }
-    setMemberSearch('');
-    setMemberSearchOpen(false);
-  };
-
   const handleRemoveMember = (userId) => {
     setSelectedMembers(selectedMembers.filter(m => m.id !== userId));
+  };
+
+  const handleOpenMemberPopup = () => {
+    setTempSelectedMembers([...selectedMembers]);
+    setMemberPopupOpen(true);
+  };
+
+  const handleToggleMember = (user) => {
+    const isSelected = tempSelectedMembers.find(m => m.id === user.id);
+    if (isSelected) {
+      setTempSelectedMembers(tempSelectedMembers.filter(m => m.id !== user.id));
+    } else {
+      setTempSelectedMembers([...tempSelectedMembers, user]);
+    }
+  };
+
+  const handleSaveMembers = () => {
+    setSelectedMembers([...tempSelectedMembers]);
+    setMemberPopupOpen(false);
+    setMemberSearch('');
   };
 
   const filteredUsers = allUsers.filter(user => 
     user.full_name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
     user.email?.toLowerCase().includes(memberSearch.toLowerCase())
-  ).filter(user => !selectedMembers.find(m => m.id === user.id));
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
