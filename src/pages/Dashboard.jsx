@@ -22,6 +22,7 @@ import LeaveRequestForm from '../components/leave/LeaveRequestForm';
 import LeaveRequestList from '../components/leave/LeaveRequestList';
 import NotificationBell from '../components/notifications/NotificationBell';
 import AttendanceReminderPopup from '../components/attendance/AttendanceReminderPopup';
+import { useCheckInOutReminders } from '../components/hooks/useCheckInOutReminders';
 
 // Live Timer Component
 function LiveTimer({ firstCheckIn, lastCheckOut }) {
@@ -99,6 +100,9 @@ export default function Dashboard() {
   });
 
   const todayAttendance = myAttendance.find(a => a.date === today);
+
+  // Enable desktop reminders for check-in/check-out
+  useCheckInOutReminders(user, todayAttendance);
 
   // Show attendance reminder when app loads if no check-in today
   useEffect(() => {
