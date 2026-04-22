@@ -318,7 +318,7 @@ export default function Dashboard() {
               </Avatar>
               <div className="flex-1">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Welcome, {user.full_name?.split(' ')[0]}!
+                  Welcome Back, {user.full_name?.split(' ')[0]}!
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">{format(new Date(), "EEEE, MMMM d, yyyy")}</p>
               </div>
@@ -332,7 +332,6 @@ export default function Dashboard() {
             </div>
           </Card>
         </motion.div>
-
         {/* Large Check-In/Out Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
