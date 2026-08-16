@@ -1,0 +1,55 @@
+{
+  "name": "GroupMember",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string",
+      "description": "ID of the group"
+    },
+    "group_name": {
+      "type": "string",
+      "description": "Name of the group"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID of the user"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of the user"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "member"
+      ],
+      "default": "member",
+      "description": "Role in the group"
+    },
+    "added_by": {
+      "type": "string",
+      "description": "User ID who added this member"
+    },
+    "added_by_name": {
+      "type": "string",
+      "description": "Name of user who added this member"
+    }
+  },
+  "required": [
+    "group_id",
+    "user_id",
+    "user_email"
+  ],
+  "permissions": {
+    "create": "auth.user.role == 'admin' || auth.user.role == 'user'",
+    "read": "auth.user.id == record.user_id || auth.user.role == 'admin'",
+    "update": "auth.user.role == 'admin'",
+    "delete": "auth.user.role == 'admin'",
+    "list": "auth.user.role == 'admin' || auth.user.role == 'user'"
+  }
+}

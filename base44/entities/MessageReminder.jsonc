@@ -1,0 +1,33 @@
+{
+  "name": "MessageReminder",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID who set the reminder"
+    },
+    "message_id": {
+      "type": "string",
+      "description": "Message ID to remind about"
+    },
+    "message_text": {
+      "type": "string",
+      "description": "Copy of message text for notification"
+    },
+    "reminder_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When to trigger the reminder"
+    },
+    "is_triggered": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether reminder has been triggered"
+    }
+  },
+  "required": [
+    "user_id",
+    "message_id",
+    "reminder_time"
+  ]
+}

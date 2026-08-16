@@ -1,0 +1,69 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "company_name": {
+      "type": "string",
+      "description": "Company name"
+    },
+    "owner_id": {
+      "type": "string",
+      "description": "Owner user ID"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Owner email"
+    },
+    "subscription_plan": {
+      "type": "string",
+      "enum": [
+        "Basic",
+        "Pro"
+      ],
+      "default": "Basic",
+      "description": "Current subscription plan"
+    },
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "cancelled"
+      ],
+      "default": "active",
+      "description": "Subscription status"
+    },
+    "subscription_start_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Subscription start date"
+    },
+    "subscription_end_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Subscription end date"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "PayPal",
+        "Razorpay"
+      ],
+      "description": "Payment method"
+    },
+    "logo": {
+      "type": "string",
+      "description": "Company logo URL"
+    },
+    "employees_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of employees"
+    }
+  },
+  "required": [
+    "company_name",
+    "owner_id",
+    "owner_email"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "profile_photo": {
+      "type": "string",
+      "description": "User's profile photo URL"
+    },
+    "is_online": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user is currently online"
+    },
+    "phone": {
+      "type": "string",
+      "description": "User's phone number"
+    },
+    "location": {
+      "type": "string",
+      "description": "User's location"
+    },
+    "employee_id": {
+      "type": "string",
+      "description": "Employee ID"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department"
+    },
+    "last_active": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last activity timestamp"
+    }
+  },
+  "required": [
+    "profile_photo",
+    "phone",
+    "location",
+    "employee_id",
+    "department",
+    "last_active"
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "name": "Attendance",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string",
+      "description": "User ID of the employee"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Email of the employee"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "Name of the employee"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Attendance date"
+    },
+    "first_check_in": {
+      "type": "string",
+      "format": "date-time",
+      "description": "First check-in time of the day"
+    },
+    "last_check_out": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last check-out time of the day"
+    },
+    "total_work_hours": {
+      "type": "number",
+      "default": 0,
+      "description": "Total working hours (sum of all sessions)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "present",
+        "absent",
+        "half_day",
+        "on_leave"
+      ],
+      "default": "absent",
+      "description": "Attendance status"
+    },
+    "is_late": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether employee was late"
+    },
+    "has_active_session": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether employee is currently checked in"
+    },
+    "location": {
+      "type": "string",
+      "description": "Check-in location"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Any additional notes"
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_email",
+    "date"
+  ]
+}

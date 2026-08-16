@@ -1,0 +1,56 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user receiving the notification"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID of the user receiving the notification"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification message"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "check_in",
+        "leave_approved",
+        "leave_rejected",
+        "attendance_reminder",
+        "new_message",
+        "group_added"
+      ],
+      "description": "Type of notification"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether notification has been read"
+    },
+    "related_id": {
+      "type": "string",
+      "description": "ID of related entity (attendance, leave request, group, etc.)"
+    }
+  },
+  "required": [
+    "user_email",
+    "title",
+    "message",
+    "type"
+  ],
+  "permissions": {
+    "create": "auth.user.role == 'admin' || auth.user.role == 'user'",
+    "read": "auth.user.email == record.user_email || auth.user.role == 'admin'",
+    "update": "auth.user.email == record.user_email || auth.user.role == 'admin'",
+    "delete": "auth.user.email == record.user_email || auth.user.role == 'admin'",
+    "list": "auth.user.role == 'admin' || auth.user.role == 'user'"
+  }
+}

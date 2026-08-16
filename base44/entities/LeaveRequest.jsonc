@@ -1,0 +1,74 @@
+{
+  "name": "LeaveRequest",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string",
+      "description": "User ID of the employee"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Email of the employee"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "Name of the employee"
+    },
+    "leave_type": {
+      "type": "string",
+      "enum": [
+        "sick",
+        "casual",
+        "annual",
+        "emergency",
+        "other"
+      ],
+      "description": "Type of leave"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Leave start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Leave end date"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for leave"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Leave request status"
+    },
+    "admin_remarks": {
+      "type": "string",
+      "description": "Remarks from admin"
+    },
+    "reviewed_by": {
+      "type": "string",
+      "description": "Admin who reviewed the request"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the request was reviewed"
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_email",
+    "leave_type",
+    "start_date",
+    "end_date",
+    "reason"
+  ]
+}

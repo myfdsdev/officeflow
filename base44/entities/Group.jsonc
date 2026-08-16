@@ -1,0 +1,37 @@
+{
+  "name": "Group",
+  "type": "object",
+  "properties": {
+    "group_name": {
+      "type": "string",
+      "description": "Name of the group"
+    },
+    "description": {
+      "type": "string",
+      "description": "Group description"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "User ID of the creator"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Name of the creator"
+    },
+    "group_type": {
+      "type": "string",
+      "enum": [
+        "attendance",
+        "project",
+        "department",
+        "custom"
+      ],
+      "default": "attendance",
+      "description": "Type of group"
+    }
+  },
+  "required": [
+    "group_name",
+    "created_by"
+  ]
+}

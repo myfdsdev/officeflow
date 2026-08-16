@@ -1,0 +1,42 @@
+{
+  "name": "ProjectMember",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project"
+    },
+    "project_name": {
+      "type": "string",
+      "description": "Name of the project"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID of the member"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the member"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of the member"
+    },
+    "added_by": {
+      "type": "string",
+      "description": "Admin who added this member"
+    }
+  },
+  "required": [
+    "project_id",
+    "user_id",
+    "user_email"
+  ],
+  "permissions": {
+    "create": "auth.user.role == 'admin'",
+    "read": "auth.user.role == 'admin' || auth.user.id == record.user_id",
+    "update": "auth.user.role == 'admin'",
+    "delete": "auth.user.role == 'admin'",
+    "list": "auth.user.role == 'admin' || auth.user.role == 'user'"
+  }
+}

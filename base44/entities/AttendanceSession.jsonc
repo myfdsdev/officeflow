@@ -1,0 +1,58 @@
+{
+  "name": "AttendanceSession",
+  "type": "object",
+  "properties": {
+    "attendance_id": {
+      "type": "string",
+      "description": "Parent attendance record ID"
+    },
+    "employee_id": {
+      "type": "string",
+      "description": "User ID of the employee"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Email of the employee"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Session date"
+    },
+    "check_in_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Check-in timestamp"
+    },
+    "check_out_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Check-out timestamp"
+    },
+    "session_duration": {
+      "type": "number",
+      "description": "Session duration in hours"
+    },
+    "check_out_reason": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "auto_power_cut",
+        "auto_inactive",
+        "auto_shutdown"
+      ],
+      "description": "Reason for checkout"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether session is currently active"
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_email",
+    "date",
+    "check_in_time"
+  ]
+}

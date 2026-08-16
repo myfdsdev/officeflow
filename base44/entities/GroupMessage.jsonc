@@ -1,0 +1,53 @@
+{
+  "name": "GroupMessage",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string",
+      "description": "ID of the group"
+    },
+    "group_name": {
+      "type": "string",
+      "description": "Name of the group"
+    },
+    "sender_id": {
+      "type": "string",
+      "description": "User ID of the sender"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Email of the sender"
+    },
+    "sender_name": {
+      "type": "string",
+      "description": "Name of the sender"
+    },
+    "message_text": {
+      "type": "string",
+      "description": "The message content"
+    },
+    "is_edited": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the message has been edited"
+    },
+    "is_deleted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the message is deleted"
+    }
+  },
+  "required": [
+    "group_id",
+    "sender_id",
+    "sender_email",
+    "message_text"
+  ],
+  "permissions": {
+    "create": "auth.user.role == 'admin' || auth.user.role == 'user'",
+    "read": "auth.user.role == 'admin' || auth.user.role == 'user'",
+    "update": "auth.user.id == record.sender_id || auth.user.role == 'admin'",
+    "delete": "auth.user.id == record.sender_id || auth.user.role == 'admin'",
+    "list": "auth.user.role == 'admin' || auth.user.role == 'user'"
+  }
+}

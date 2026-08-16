@@ -1,0 +1,76 @@
+{
+  "name": "Task",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project"
+    },
+    "task_name": {
+      "type": "string",
+      "description": "Name of the task"
+    },
+    "owner_id": {
+      "type": "string",
+      "description": "User ID assigned to task"
+    },
+    "owner_name": {
+      "type": "string",
+      "description": "Name of task owner"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "working_on_it",
+        "done",
+        "stuck"
+      ],
+      "default": "not_started",
+      "description": "Task status"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Task due date"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium",
+      "description": "Task priority"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of file URLs"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Task notes"
+    },
+    "position": {
+      "type": "number",
+      "default": 0,
+      "description": "Task order position"
+    }
+  },
+  "required": [
+    "project_id",
+    "task_name"
+  ],
+  "permissions": {
+    "create": "auth.user.role == 'admin'",
+    "read": "auth.user.role == 'admin' || auth.user.role == 'user'",
+    "update": "auth.user.role == 'admin' || auth.user.id == record.owner_id",
+    "delete": "auth.user.role == 'admin'",
+    "list": "auth.user.role == 'admin' || auth.user.role == 'user'"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Company ID"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "Basic",
+        "Pro"
+      ],
+      "description": "Subscription plan"
+    },
+    "price": {
+      "type": "number",
+      "description": "Price in dollars"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "PayPal",
+        "Razorpay"
+      ],
+      "description": "Payment method used"
+    },
+    "transaction_id": {
+      "type": "string",
+      "description": "Payment transaction ID"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "failed",
+        "cancelled"
+      ],
+      "default": "pending",
+      "description": "Payment status"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Subscription start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Subscription end date"
+    },
+    "auto_renew": {
+      "type": "boolean",
+      "default": true,
+      "description": "Auto renewal enabled"
+    }
+  },
+  "required": [
+    "company_id",
+    "plan",
+    "price",
+    "payment_method",
+    "status"
+  ]
+}

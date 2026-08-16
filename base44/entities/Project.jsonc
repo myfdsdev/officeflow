@@ -1,0 +1,65 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "description": "Name of the project"
+    },
+    "description": {
+      "type": "string",
+      "description": "Project description"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Admin who created the project"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Name of creator"
+    },
+    "enabled_columns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "status",
+          "due_date",
+          "priority",
+          "files",
+          "notes"
+        ]
+      },
+      "default": [
+        "owner",
+        "status",
+        "due_date",
+        "priority",
+        "notes"
+      ],
+      "description": "Selected columns for this project"
+    },
+    "color": {
+      "type": "string",
+      "default": "#6366f1",
+      "description": "Project color theme"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether project is archived"
+    }
+  },
+  "required": [
+    "project_name",
+    "created_by"
+  ],
+  "permissions": {
+    "create": "auth.user.role == 'admin'",
+    "read": "auth.user.role == 'admin' || auth.user.role == 'user'",
+    "update": "auth.user.role == 'admin'",
+    "delete": "auth.user.role == 'admin'",
+    "list": "auth.user.role == 'admin' || auth.user.role == 'user'"
+  }
+}
